@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CrediLens AI | Responsible borrower assessment",
+  title: "CrediLens AI",
   description:
     "An educational borrower assessment experience powered by a validated ML ensemble.",
 };
