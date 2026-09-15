@@ -18,10 +18,15 @@ const optionalNumber = (minimum?: number, maximum?: number) =>
     (value) => (value === "" || (typeof value === "number" && Number.isNaN(value)) ? null : value),
     z.number().finite().min(minimum ?? -Infinity).max(maximum ?? Infinity).nullable(),
   );
+const optionalInteger = (minimum?: number, maximum?: number) =>
+  z.preprocess(
+    (value) => (value === "" || (typeof value === "number" && Number.isNaN(value)) ? null : value),
+    z.number().finite().int("Enter a whole number.").min(minimum ?? -Infinity).max(maximum ?? Infinity).nullable(),
+  );
 const borrowerSchema = z
   .object({
     borrower_type: z.preprocess((value) => (value === "" ? null : value), z.enum(["gig", "migrant", "rural"]).nullable()),
-    household_size: optionalNumber(0),
+    household_size: optionalInteger(0),
     income_month_1: optionalNumber(0),
     income_month_2: optionalNumber(0),
     income_month_3: optionalNumber(0),
@@ -29,33 +34,33 @@ const borrowerSchema = z
     income_month_5: optionalNumber(0),
     income_month_6: optionalNumber(0),
     employment_type: z.preprocess((value) => (value === "" ? null : value), z.enum(["daily-wage", "salaried-gig", "seasonal", "self-employed"]).nullable()),
-    months_at_current_job: optionalNumber(0),
-    num_income_sources: optionalNumber(0),
+    months_at_current_job: optionalInteger(0),
+    num_income_sources: optionalInteger(0),
     upi_transactions_per_month: optionalNumber(0),
     upi_avg_transaction_amount: optionalNumber(0),
-    upi_months_active: optionalNumber(0),
-    mobile_wallet_used: optionalNumber(0, 1),
-    utility_bills_paid: optionalNumber(0),
-    utility_bills_total: optionalNumber(0),
-    rent_paid_on_time_months: optionalNumber(0),
-    total_rental_months: optionalNumber(0),
-    same_number_since_year: optionalNumber(1900, 2100),
+    upi_months_active: optionalInteger(0),
+    mobile_wallet_used: optionalInteger(0, 1),
+    utility_bills_paid: optionalInteger(0),
+    utility_bills_total: optionalInteger(0),
+    rent_paid_on_time_months: optionalInteger(0),
+    total_rental_months: optionalInteger(0),
+    same_number_since_year: optionalInteger(1900, 2100),
     avg_monthly_recharge_amount: optionalNumber(0),
     recharge_frequency_per_month: optionalNumber(0),
     ecomm_orders_per_month: optionalNumber(0),
     ecomm_return_rate: optionalNumber(0, 1),
     prepaid_orders_ratio: optionalNumber(0, 1),
-    survey_q1: optionalNumber(1, 5),
-    survey_q2: optionalNumber(1, 5),
-    survey_q3: optionalNumber(1, 5),
-    survey_q4: optionalNumber(1, 5),
-    survey_q5: optionalNumber(1, 5),
-    survey_q6: optionalNumber(1, 5),
-    survey_q7: optionalNumber(1, 5),
-    survey_q8: optionalNumber(1, 5),
+    survey_q1: optionalInteger(1, 5),
+    survey_q2: optionalInteger(1, 5),
+    survey_q3: optionalInteger(1, 5),
+    survey_q4: optionalInteger(1, 5),
+    survey_q5: optionalInteger(1, 5),
+    survey_q6: optionalInteger(1, 5),
+    survey_q7: optionalInteger(1, 5),
+    survey_q8: optionalInteger(1, 5),
     loan_amount_requested: optionalNumber(0),
     loan_purpose: z.preprocess((value) => (value === "" ? null : value), z.enum(["agriculture", "business", "consumption", "education", "medical"]).nullable()),
-    loan_tenure_months: optionalNumber(0),
+    loan_tenure_months: optionalInteger(0),
   })
   .superRefine((value, context) => {
     if (
@@ -129,6 +134,36 @@ type FieldSpec = {
   step?: string;
   contextStep?: 1 | 2;
 };
+
+const integerFieldNames = new Set<keyof FormValues>([
+  "household_size",
+  "months_at_current_job",
+  "num_income_sources",
+  "upi_months_active",
+  "mobile_wallet_used",
+  "utility_bills_paid",
+  "utility_bills_total",
+  "rent_paid_on_time_months",
+  "total_rental_months",
+  "same_number_since_year",
+  "survey_q1",
+  "survey_q2",
+  "survey_q3",
+  "survey_q4",
+  "survey_q5",
+  "survey_q6",
+  "survey_q7",
+  "survey_q8",
+  "loan_tenure_months",
+]);
+
+function numericConstraint(name: keyof FormValues) {
+  if (name === "mobile_wallet_used") return { min: 0, max: 1 };
+  if (name === "same_number_since_year") return { min: 1900, max: 2100 };
+  if (name.startsWith("survey_q")) return { min: 1, max: 5 };
+  if (name === "ecomm_return_rate" || name === "prepaid_orders_ratio") return { min: 0, max: 1 };
+  return { min: 0 };
+}
 
 const fieldCatalog: FieldSpec[] = [
   {
@@ -450,7 +485,17 @@ export default function AssessmentPage() {
                           {activeField.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                         </select>
                       ) : (
-                        <input id={activeField.name} type="number" step={activeField.step} className={inputClass(Boolean(activeError))} {...register(activeField.name as keyof FormValues, { valueAsNumber: true })} aria-describedby={activeError ? `${activeField.name}-error` : undefined} />
+                        <input
+                          id={activeField.name}
+                          type="number"
+                          step={integerFieldNames.has(activeField.name as keyof FormValues) ? "1" : activeField.step}
+                          min={numericConstraint(activeField.name as keyof FormValues).min}
+                          max={numericConstraint(activeField.name as keyof FormValues).max}
+                          inputMode={integerFieldNames.has(activeField.name as keyof FormValues) ? "numeric" : "decimal"}
+                          className={inputClass(Boolean(activeError))}
+                          {...register(activeField.name as keyof FormValues, { valueAsNumber: true })}
+                          aria-describedby={activeError ? `${activeField.name}-error` : undefined}
+                        />
                       )}
                     </Field>
                   </div>
@@ -483,7 +528,7 @@ export default function AssessmentPage() {
           </form>
         </div>
         <div className="border-t border-[#e2e6f7] px-6 py-5 text-center text-xs text-[#8490b5] sm:px-10">
-          Educational tool only — CrediLens does not approve, reject, or guarantee access to credit.
+          Made with ♥ by AI &amp; DS Final Year Team (Prophetic Programmers)
         </div>
       </div>
     </main>

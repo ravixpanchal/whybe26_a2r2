@@ -71,6 +71,17 @@ def test_predict_rejects_logically_inconsistent_input() -> None:
     assert response.json()["error"]["code"] == "validation_error"
 
 
+def test_predict_rejects_fractional_integer_fields() -> None:
+    payload = _payload()
+    payload["borrower_input"]["mobile_wallet_used"] = 0.42
+
+    with TestClient(create_app()) as client:
+        response = client.post("/api/assessment/predict", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
 def test_predict_marks_missing_and_unknown_values_as_lower_reliability() -> None:
     payload = _payload()
     payload["borrower_input"]["income_month_1"] = None

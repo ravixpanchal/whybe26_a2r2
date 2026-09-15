@@ -294,7 +294,7 @@ export default function AssessmentResultsPage() {
         </div>
         <footer className="report-footer">
           <span>CrediLens AI · Built for clearer financial understanding</span>
-          <span>Educational tool only — not an official credit decision.</span>
+          <span>Made with ♥ by AI &amp; DS Final Year Team (Prophetic Programmers)</span>
         </footer>
         <p className="border-t border-[var(--line)] pb-4 pt-6 text-xs leading-5 text-[var(--muted)]">Responsible AI notice: This report is an assessment aid based on the information provided, not a guaranteed lending decision or a substitute for a lender&apos;s complete evaluation. Full Name and Date of Birth are report metadata only and are not used as ML prediction features. Self-reported information may require independent verification.</p>
       </div>

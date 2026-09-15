@@ -89,7 +89,7 @@ export default function Home() {
 
         <footer className="home-footer">
           <span>CrediLens AI · Built for clearer financial understanding</span>
-          <span>Educational tool only — not an official credit decision.</span>
+          <span>Made with ♥ by AI &amp; DS Final Year Team (Prophetic Programmers)</span>
         </footer>
       </div>
 
