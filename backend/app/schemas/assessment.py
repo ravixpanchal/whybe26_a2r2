@@ -126,3 +126,22 @@ class ExplanationResponse(BaseModel):
     explanation: str
     explanation_source: Literal["openrouter", "fallback"]
     disclaimer: str
+
+
+class SimulatorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    borrower_input: BorrowerInput
+
+
+class SimulatorResponse(BaseModel):
+    assessment: AssessmentResponse
+    disclaimer: str
+
+
+class ReportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    explanation: ExplanationResponse
+    borrower_input: BorrowerInput
+    simulator: SimulatorResponse | None = None

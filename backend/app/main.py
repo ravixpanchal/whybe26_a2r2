@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
 from app.api.assessment import router as assessment_router
+from app.api.report import router as report_router
 from app.config import Settings, get_settings
 from app.core.exceptions import (
     ArtifactLoadError,
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_exception_handler(Exception, http_exception_handler)
     app.include_router(health_router)
     app.include_router(assessment_router)
+    app.include_router(report_router)
 
     @app.get("/")
     def root() -> dict[str, str]:

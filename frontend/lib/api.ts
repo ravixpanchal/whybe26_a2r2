@@ -2,6 +2,7 @@ import type {
   AssessmentRequest,
   AssessmentResponse,
   ExplanationResponse,
+  SimulatorResponse,
 } from "@/types/assessment";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -52,6 +53,33 @@ export function requestExplanation(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export function simulateAssessment(
+  payload: AssessmentRequest,
+): Promise<SimulatorResponse> {
+  return request<SimulatorResponse>("/api/assessment/simulator/predict", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function downloadReport(
+  payload: {
+    explanation: ExplanationResponse;
+    borrower_input: AssessmentRequest["borrower_input"];
+    simulator?: SimulatorResponse;
+  },
+): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/api/report/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "report_failed", "The report could not be generated.");
+  }
+  return response.blob();
 }
 
 export { ApiError };

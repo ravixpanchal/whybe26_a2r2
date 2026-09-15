@@ -194,3 +194,33 @@ def test_openrouter_transient_failure_is_retried_then_falls_back() -> None:
     assert source == "fallback"
     assert client.calls == 2
     assert text.startswith("The validated model places")
+
+
+def test_simulator_reruns_the_real_prediction_pipeline() -> None:
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/api/assessment/simulator/predict",
+            json=_payload(),
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["assessment"]["model_comparison"]["primary_model"] == "soft_voting_ensemble"
+    assert "not a guarantee" in body["disclaimer"]
+
+
+def test_report_endpoint_returns_pdf_with_assessment_content() -> None:
+    with TestClient(create_app()) as client:
+        explanation_response = client.post(
+            "/api/assessment/explanation",
+            json=_payload(),
+        )
+        payload = _payload()
+        payload["explanation"] = explanation_response.json()
+        response = client.post("/api/report/generate", json=payload)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "attachment" in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF")
+    assert len(response.content) > 1000

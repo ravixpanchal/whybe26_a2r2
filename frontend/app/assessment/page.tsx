@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Field } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { predictAssessment } from "@/lib/api";
+import { requestExplanation } from "@/lib/api";
 import type { AssessmentRequest, BorrowerInput } from "@/types/assessment";
 
 const optionalNumber = (minimum?: number, maximum?: number) =>
@@ -130,8 +130,10 @@ export default function AssessmentPage() {
   const onSubmit = async (values: FormValues) => {
     const parsed = borrowerSchema.parse(values);
     try {
-      const result = await predictAssessment({ borrower_input: parsed as BorrowerInput } satisfies AssessmentRequest);
-      sessionStorage.setItem("credilens:last-assessment", JSON.stringify(result));
+      const result = await requestExplanation({ borrower_input: parsed as BorrowerInput } satisfies AssessmentRequest);
+      sessionStorage.setItem("credilens:last-explanation", JSON.stringify(result));
+      sessionStorage.setItem("credilens:last-assessment", JSON.stringify(result.assessment));
+      sessionStorage.setItem("credilens:last-input", JSON.stringify(parsed));
       router.push("/assessment/results");
     } catch {
       setError("root", { message: "We could not reach the assessment service. Please try again." });

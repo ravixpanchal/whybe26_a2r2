@@ -77,3 +77,8 @@ export type ExplanationResponse = {
   explanation_source: "openrouter" | "fallback";
   disclaimer: string;
 };
+
+export type SimulatorResponse = {
+  assessment: AssessmentResponse;
+  disclaimer: string;
+};
