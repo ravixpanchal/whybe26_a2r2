@@ -1,0 +1,48 @@
+{
+  "model": "random_forest",
+  "validation": {
+    "model": "random_forest",
+    "split": "validation",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.29000000000000004,
+    "accuracy": 0.8646666666666667,
+    "balanced_accuracy": 0.8270588235294117,
+    "precision": 0.5337423312883436,
+    "recall": 0.7733333333333333,
+    "f1": 0.631578947368421,
+    "roc_auc": 0.9076252723311548,
+    "average_precision": 0.6433719569229264,
+    "log_loss": 0.2586739294370796,
+    "brier_score": 0.08017034035965141,
+    "tn": 1123,
+    "fp": 152,
+    "fn": 51,
+    "tp": 174
+  },
+  "test": {
+    "model": "random_forest",
+    "split": "test",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.29000000000000004,
+    "accuracy": 0.8513333333333334,
+    "balanced_accuracy": 0.8045751633986928,
+    "precision": 0.503030303030303,
+    "recall": 0.7377777777777778,
+    "f1": 0.5981981981981982,
+    "roc_auc": 0.9103686274509803,
+    "average_precision": 0.6664751187767123,
+    "log_loss": 0.25692244153449095,
+    "brier_score": 0.0800069852027707,
+    "tn": 1111,
+    "fp": 164,
+    "fn": 59,
+    "tp": 166
+  },
+  "protocol": {
+    "training_source": "processed/train.csv",
+    "selection_source": "processed/validation.csv",
+    "test_source": "processed/test.csv (untouched until final evaluation)"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "model": "xgboost",
+  "validation": {
+    "model": "xgboost",
+    "split": "validation",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.55,
+    "accuracy": 0.8813333333333333,
+    "balanced_accuracy": 0.8002614379084967,
+    "precision": 0.5900383141762452,
+    "recall": 0.6844444444444444,
+    "f1": 0.6337448559670782,
+    "roc_auc": 0.9122300653594771,
+    "average_precision": 0.670588562189534,
+    "log_loss": 0.28587836851943443,
+    "brier_score": 0.09093290373117018,
+    "tn": 1168,
+    "fp": 107,
+    "fn": 71,
+    "tp": 154
+  },
+  "test": {
+    "model": "xgboost",
+    "split": "test",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.55,
+    "accuracy": 0.8713333333333333,
+    "balanced_accuracy": 0.7925490196078432,
+    "precision": 0.5583941605839416,
+    "recall": 0.68,
+    "f1": 0.6132264529058116,
+    "roc_auc": 0.9109507625272331,
+    "average_precision": 0.6606165644639186,
+    "log_loss": 0.29052289427094835,
+    "brier_score": 0.0923104311750821,
+    "tn": 1154,
+    "fp": 121,
+    "fn": 72,
+    "tp": 153
+  },
+  "protocol": {
+    "training_source": "processed/train.csv",
+    "selection_source": "processed/validation.csv",
+    "test_source": "processed/test.csv (untouched until final evaluation)"
+  }
+}

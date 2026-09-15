@@ -1,0 +1,48 @@
+{
+  "model": "logistic_regression",
+  "validation": {
+    "model": "logistic_regression",
+    "split": "validation",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.6799999999999999,
+    "accuracy": 0.8633333333333333,
+    "balanced_accuracy": 0.8024836601307189,
+    "precision": 0.5331125827814569,
+    "recall": 0.7155555555555555,
+    "f1": 0.6110056925996205,
+    "roc_auc": 0.9010579520697168,
+    "average_precision": 0.6548573081248417,
+    "log_loss": 0.394057721771517,
+    "brier_score": 0.12978688037836733,
+    "tn": 1134,
+    "fp": 141,
+    "fn": 64,
+    "tp": 161
+  },
+  "test": {
+    "model": "logistic_regression",
+    "split": "test",
+    "n": 1500,
+    "positive_rate": 0.15,
+    "threshold": 0.6799999999999999,
+    "accuracy": 0.8513333333333334,
+    "balanced_accuracy": 0.7990849673202615,
+    "precision": 0.5030864197530864,
+    "recall": 0.7244444444444444,
+    "f1": 0.5938069216757741,
+    "roc_auc": 0.9008871459694989,
+    "average_precision": 0.631549645861383,
+    "log_loss": 0.40771474176472383,
+    "brier_score": 0.13493125964227257,
+    "tn": 1114,
+    "fp": 161,
+    "fn": 62,
+    "tp": 163
+  },
+  "protocol": {
+    "training_source": "processed/train.csv",
+    "selection_source": "processed/validation.csv",
+    "test_source": "processed/test.csv (untouched until final evaluation)"
+  }
+}

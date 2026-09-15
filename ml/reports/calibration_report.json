@@ -1,0 +1,186 @@
+[
+  {
+    "model": "logistic_regression",
+    "brier_score": 0.12978688037836733,
+    "calibration_bins": [
+      {
+        "mean_predicted": 0.0014211284845476707,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.010296513447490534,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.029821798077861797,
+        "fraction_positive": 0.02
+      },
+      {
+        "mean_predicted": 0.06556127906119191,
+        "fraction_positive": 0.006666666666666667
+      },
+      {
+        "mean_predicted": 0.12498543389702765,
+        "fraction_positive": 0.02
+      },
+      {
+        "mean_predicted": 0.2333801184100453,
+        "fraction_positive": 0.1
+      },
+      {
+        "mean_predicted": 0.38731846568336986,
+        "fraction_positive": 0.08666666666666667
+      },
+      {
+        "mean_predicted": 0.576768211839558,
+        "fraction_positive": 0.20666666666666667
+      },
+      {
+        "mean_predicted": 0.7809227474176255,
+        "fraction_positive": 0.36666666666666664
+      },
+      {
+        "mean_predicted": 0.9256726144489197,
+        "fraction_positive": 0.6933333333333334
+      }
+    ]
+  },
+  {
+    "model": "random_forest",
+    "brier_score": 0.08017034035965141,
+    "calibration_bins": [
+      {
+        "mean_predicted": 0.0006345770258905978,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.004917665143403213,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.01235439311755343,
+        "fraction_positive": 0.006666666666666667
+      },
+      {
+        "mean_predicted": 0.025342742582600185,
+        "fraction_positive": 0.006666666666666667
+      },
+      {
+        "mean_predicted": 0.04985289611137802,
+        "fraction_positive": 0.03333333333333333
+      },
+      {
+        "mean_predicted": 0.08720702632343556,
+        "fraction_positive": 0.08666666666666667
+      },
+      {
+        "mean_predicted": 0.14714817171614708,
+        "fraction_positive": 0.08666666666666667
+      },
+      {
+        "mean_predicted": 0.24603323802181298,
+        "fraction_positive": 0.18
+      },
+      {
+        "mean_predicted": 0.42084482837515086,
+        "fraction_positive": 0.4
+      },
+      {
+        "mean_predicted": 0.6619102498170082,
+        "fraction_positive": 0.7
+      }
+    ]
+  },
+  {
+    "model": "xgboost",
+    "brier_score": 0.09093290567398071,
+    "calibration_bins": [
+      {
+        "mean_predicted": 0.0002243783102312591,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.0009468344585426773,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.0025919183522152404,
+        "fraction_positive": 0.006666666666666667
+      },
+      {
+        "mean_predicted": 0.006908570130666097,
+        "fraction_positive": 0.006666666666666667
+      },
+      {
+        "mean_predicted": 0.01864801105732719,
+        "fraction_positive": 0.02666666666666667
+      },
+      {
+        "mean_predicted": 0.05128761048118274,
+        "fraction_positive": 0.05333333333333334
+      },
+      {
+        "mean_predicted": 0.1392319044470787,
+        "fraction_positive": 0.10666666666666667
+      },
+      {
+        "mean_predicted": 0.32998615960280103,
+        "fraction_positive": 0.22
+      },
+      {
+        "mean_predicted": 0.6404240683714548,
+        "fraction_positive": 0.37333333333333335
+      },
+      {
+        "mean_predicted": 0.9077550768852234,
+        "fraction_positive": 0.7066666666666667
+      }
+    ]
+  },
+  {
+    "model": "soft_voting",
+    "brier_score": 0.08888572730773349,
+    "calibration_bins": [
+      {
+        "mean_predicted": 0.001417901872324621,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.007385958865439937,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.01824137076156436,
+        "fraction_positive": 0.0
+      },
+      {
+        "mean_predicted": 0.03767615646823941,
+        "fraction_positive": 0.013333333333333334
+      },
+      {
+        "mean_predicted": 0.07129518785003701,
+        "fraction_positive": 0.02666666666666667
+      },
+      {
+        "mean_predicted": 0.13044191961015983,
+        "fraction_positive": 0.07333333333333333
+      },
+      {
+        "mean_predicted": 0.22557392650408598,
+        "fraction_positive": 0.06666666666666667
+      },
+      {
+        "mean_predicted": 0.38503207030314934,
+        "fraction_positive": 0.24
+      },
+      {
+        "mean_predicted": 0.5998000981923874,
+        "fraction_positive": 0.36666666666666664
+      },
+      {
+        "mean_predicted": 0.8199349532721929,
+        "fraction_positive": 0.7133333333333334
+      }
+    ]
+  }
+]

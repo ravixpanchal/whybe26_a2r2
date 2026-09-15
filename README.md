@@ -18,6 +18,46 @@ CrediLens AI is an explainable borrower risk assessment platform for educational
 4. Install frontend dependencies: `cd frontend && npm install`
 5. Copy `.env.example` to `.env` and fill in the required values.
 
+## FastAPI backend
+
+Run the backend from the `backend/` directory:
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+The development server exposes `GET http://localhost:8000/api/health`.
+The health endpoint is available while artifact validation is explicitly disabled
+with `ARTIFACT_LOADING_REQUIRED=false`; this mode is for health/API development
+only and does not enable predictions.
+
+By default, startup validates and loads the configured model, metadata, and
+separate preprocessing artifact once. The current `model.pkl` requires the ML
+runtime dependencies used to create it (including XGBoost). Keep
+`ARTIFACT_LOADING_REQUIRED=true` in production so missing or incompatible
+artifacts fail startup clearly. `PREPROCESSING_MODE` can be `separate`,
+`embedded`, or `auto`; do not change it without confirming the training-machine
+artifact contract. No prediction endpoint is exposed until Phase 5/6 finalize
+the input and preprocessing contract.
+
+### ML artifact compatibility
+
+The original `ml/artifacts/model.pkl` is a legacy joblib pickle containing
+XGBoost state that is not reliably portable across runtimes. The repository
+does not replace it automatically. The supported remediation is to run
+`ml/evaluation/export_portable_artifacts.py` in the exact environment where the
+source ensemble and preprocessing pipeline load successfully. The exporter
+refuses to overwrite an existing `ml/artifacts/portable/` directory and writes
+the XGBoost estimator in native JSON format while keeping scikit-learn
+estimators and preprocessing as separate joblib artifacts.
+
+After validating that bundle, set `ARTIFACT_FORMAT=portable` and
+`PORTABLE_MANIFEST_FILENAME=portable/manifest.json`. If the source pickle
+cannot be loaded, do not substitute the separate legacy estimators: they do not
+represent the declared soft-voting ensemble and cannot establish compatible
+preprocessing or prediction behavior.
+
 ## ML experimentation notebooks
 
 The executable Phase 4 experiments are in `ml/notebooks/`:
