@@ -233,6 +233,8 @@ body {
 @media (max-width: 760px) {
   .home-shell { padding: 1.25rem .7rem; }
   .home-frame { min-height: calc(100vh - 2.5rem); border-radius: 1.25rem; padding: 1rem; }
+  .home-header { align-items: flex-start; flex-wrap: wrap; }
+  .home-header-action { margin-left: auto; }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 3.5rem .5rem 2.75rem; }
   .home-credit-card { width: 100%; max-width: 390px; min-height: 236px; align-self: center; }
   .home-tiles { grid-template-columns: 1fr; padding: 0 .5rem; }
@@ -249,9 +251,54 @@ body {
 @media (max-width: 760px) {
   .report-shell { border-radius: 1.25rem; padding: 1rem; }
   .report-header { align-items: flex-start; flex-direction: column; }
+  .report-header > div { width: 100%; justify-content: flex-start; }
   .report-intro { padding: 2rem .25rem 0; }
   .report-borrower-strip { grid-template-columns: 1fr; }
   .report-footer { align-items: flex-start; flex-direction: column; }
+  .report-signal-card, .report-reliability-card { min-width: 0; }
+}
+
+@media (max-width: 480px) {
+  .home-shell { padding: .5rem; }
+  .home-frame { border-radius: 1rem; padding: .75rem; }
+  .home-brand { font-size: .9rem; }
+  .home-header-action { width: 100%; margin: .25rem 0 0; padding: .65rem .8rem; }
+  .home-hero { gap: 1.5rem; padding: 2.5rem .25rem 2rem; }
+  .home-hero h1 { font-size: clamp(2.35rem, 13vw, 3.5rem); }
+  .home-lede { margin-top: 1.25rem; font-size: .9rem; }
+  .home-credit-card { min-height: 220px; padding: 1.1rem; }
+  .home-credit-brand { font-size: 1.05rem; }
+  .home-credit-copy { bottom: 1.1rem; left: 1.1rem; font-size: .7rem; }
+  .home-credit-copy strong { font-size: .8rem; }
+  .home-credit-circles { right: .9rem; bottom: 1rem; }
+  .home-tile { min-height: 150px; padding: 1rem; }
+  .home-tile-title { margin-top: 1.5rem; }
+  .home-footer { font-size: .62rem; }
+  .home-footer span { max-width: 100%; }
+
+  .simulator-page { padding: .75rem !important; }
+  .simulator-shell { border-radius: 1rem; padding: .75rem; }
+  .simulator-intro h1 { font-size: clamp(2.5rem, 15vw, 4rem); }
+  .simulator-card { padding: 1rem; }
+  .simulator-results { gap: .75rem; }
+  .simulator-result + .simulator-result { padding-left: .75rem; }
+  .simulator-result strong { font-size: 1.55rem; }
+  .simulator-result p { font-size: .5rem; letter-spacing: .08em; }
+
+  .report-page { padding: .5rem !important; }
+  .report-shell { border-radius: 1rem; padding: .75rem; }
+  .report-brand { font-size: .9rem; }
+  .report-intro { padding-top: 1.5rem; }
+  .report-intro h1 { font-size: 2.25rem; }
+  .report-signal-card, .report-reliability-card { padding: 1.25rem !important; }
+  .report-signal-top { gap: .5rem; }
+  .report-signal-brand { font-size: .9rem; }
+  .report-signal-label { font-size: .35rem; }
+  .report-signal-card .text-6xl { font-size: 3.5rem; }
+  .report-signal-card .text-xs { font-size: .65rem; }
+  .report-signal-card .flex.justify-between { align-items: flex-start; flex-direction: column; gap: .75rem; }
+  .report-signal-card .flex.justify-between p:last-child { align-self: flex-start; }
+  .report-footer { overflow-wrap: anywhere; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-header-action, .home-tile { transition: none; }
