@@ -25,7 +25,7 @@ const optionalInteger = (minimum?: number, maximum?: number) =>
   );
 const borrowerSchema = z
   .object({
-    borrower_type: z.preprocess((value) => (value === "" ? null : value), z.enum(["gig", "migrant", "rural"]).nullable()),
+    borrower_type: z.preprocess((value) => (value === "" ? null : value), z.enum(["gig", "migrant", "rural", "student"]).nullable()),
     household_size: optionalInteger(0),
     income_month_1: optionalNumber(0),
     income_month_2: optionalNumber(0),
@@ -177,6 +177,7 @@ const fieldCatalog: FieldSpec[] = [
       { label: "Gig worker", value: "gig" },
       { label: "Migrant worker", value: "migrant" },
       { label: "Rural borrower", value: "rural" },
+      { label: "Student", value: "student" },
     ],
   },
   ...numericFields.slice(0, 3).map(([name, label, description]) => ({
