@@ -156,9 +156,9 @@ body {
 .home-credit-lines { position: absolute; inset: -30% -15%; opacity: .3; background: repeating-radial-gradient(ellipse at 30% 20%, transparent 0 42px, rgba(221,231,255,.42) 43px 44px, transparent 45px 68px); transform: rotate(16deg); }
 .home-credit-top, .home-credit-chip, .home-credit-copy, .home-credit-circles { position: relative; z-index: 1; }
 .home-credit-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.home-credit-brand { font-size: 1.05rem; font-weight: 700; letter-spacing: -.03em; }
+.home-credit-brand { font-size: 1.3rem; font-weight: 700; letter-spacing: -.04em; }
 .home-credit-label { color: #d6e2ff; font: 500 .42rem/1.45 "JetBrains Mono", monospace; letter-spacing: .22em; text-align: right; }
-.home-credit-chip { display: grid; grid-template-columns: repeat(2, 1fr); width: 43px; height: 31px; margin-top: 2.25rem; overflow: hidden; border: 1px solid rgba(255,255,255,.58); border-radius: 6px; background: linear-gradient(135deg, rgba(236,244,255,.72), rgba(164,194,255,.45)); }
+.home-credit-chip { display: grid; grid-template-columns: repeat(2, 1fr); width: 43px; height: 31px; margin-top: 2.8rem; overflow: hidden; border: 1px solid rgba(255,255,255,.58); border-radius: 6px; background: linear-gradient(135deg, rgba(236,244,255,.72), rgba(164,194,255,.45)); }
 .home-credit-chip span { border: 1px solid rgba(53,96,188,.35); }
 .home-credit-copy { position: absolute; bottom: 1.45rem; left: 1.55rem; display: flex; flex-direction: column; gap: .25rem; color: #d5e2ff; font-size: .78rem; }
 .home-credit-copy strong { color: white; font-size: .9rem; line-height: 1.45; }
