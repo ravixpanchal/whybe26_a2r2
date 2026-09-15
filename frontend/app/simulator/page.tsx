@@ -34,8 +34,8 @@ export default function SimulatorPage() {
 
   if (!input || !original) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-6">
-        <Card className="max-w-md p-8 text-center">
+      <main className="simulator-page flex min-h-screen items-center justify-center px-6">
+        <Card className="simulator-card max-w-md p-8 text-center">
           <h1 className="display-font text-3xl text-[var(--brand-dark)]">Start with an assessment</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Run an assessment before exploring a simulated scenario.</p>
           <Button href="/assessment" className="mt-6">Start assessment</Button>
@@ -69,23 +69,30 @@ export default function SimulatorPage() {
 
   const displayed = simulated ?? original;
   return (
-    <main className="min-h-screen bg-[var(--background)] px-6 py-10 lg:px-10">
-      <div className="mx-auto max-w-5xl">
-        <Link href="/assessment/results" className="text-sm font-bold text-[var(--brand)]">← Back to results</Link>
-        <div className="mt-10 max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--brand)]">What-if simulator</p>
-          <h1 className="display-font mt-4 text-5xl tracking-[-0.04em] text-[var(--brand-dark)]">Explore a scenario.</h1>
-          <p className="mt-5 text-base leading-7 text-[var(--muted)]">
+    <main className="simulator-page min-h-screen px-4 py-6 sm:px-6 sm:py-10 lg:px-10">
+      <div className="simulator-shell mx-auto max-w-5xl">
+        <header className="simulator-header">
+          <Link href="/" className="simulator-brand" aria-label="CrediLens AI home">
+            <span className="simulator-mark">C</span>
+            <span>CrediLens AI</span>
+          </Link>
+          <Link href="/assessment" className="simulator-header-action">Start New Assessment ↗</Link>
+        </header>
+        <div className="simulator-intro">
+          <Link href="/assessment/results" className="simulator-back-link">← Back to results</Link>
+          <p className="simulator-eyebrow">What-if simulator</p>
+          <h1>Explore a scenario.</h1>
+          <p>
             Adjust a small set of user-editable inputs and rerun the same validated ensemble. The simulator does not estimate changes or promise an outcome.
           </p>
         </div>
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <Card className="p-8">
-            <h2 className="display-font text-2xl text-[var(--brand-dark)]">Change inputs</h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">Only plausible, non-sensitive model fields are editable here.</p>
-            <div className="mt-7 space-y-5">
+        <div className="simulator-grid">
+          <Card className="simulator-card simulator-input-card p-8">
+            <h2>Change inputs</h2>
+            <p className="simulator-card-description">Only plausible, non-sensitive model fields are editable here.</p>
+            <div className="simulator-fields">
               {editableFields.map(([name, label, type]) => (
-                <label key={name} className="block text-sm font-semibold text-[var(--brand-dark)]">
+                <label key={name} className="simulator-field">
                   {label}
                   <input
                     type={type}
@@ -93,51 +100,63 @@ export default function SimulatorPage() {
                     step="0.01"
                     value={input[name] ?? ""}
                     onChange={(event) => update(name, event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-3 font-normal outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[#bfe4d4]"
+                    className="simulator-input"
                   />
                 </label>
               ))}
             </div>
-            {error && <p role="alert" className="mt-5 text-sm font-semibold text-red-700">{error}</p>}
-            <Button type="button" onClick={runSimulation} disabled={loading} className="mt-7 w-full">
+            {error && <p role="alert" className="simulator-error">{error}</p>}
+            <Button type="button" onClick={runSimulation} disabled={loading} className="simulator-run-button mt-7 w-full">
               {loading ? "Rerunning model…" : "Run simulated assessment →"}
             </Button>
-            <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Simulated result, not a guarantee or lending decision.</p>
+            <p className="simulator-note">Simulated result, not a guarantee or lending decision.</p>
           </Card>
           <div className="space-y-6">
-            <Card className="p-8">
-              <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Original vs simulated</p>
-              <div className="mt-5 grid grid-cols-2 gap-4">
+            <Card className="simulator-card simulator-comparison-card p-8">
+              <p className="simulator-section-label">Original vs simulated</p>
+              <div className="simulator-signal-card">
+                <div className="simulator-card-lines" aria-hidden="true" />
+                <div className="simulator-signal-top">
+                  <span>CrediLens AI</span>
+                  <small>INSIGHTS FOR A<br />BRIGHTER TOMORROW</small>
+                </div>
+                <div className="simulator-chip" aria-hidden="true"><span /><span /><span /><span /></div>
+                <div className="simulator-results">
                 {[["Original", original], ["Simulated", displayed]].map(([label, value]) => {
                   const assessment = value as AssessmentResponse;
                   return (
-                    <div key={label as string} className="rounded-xl bg-[#f0f6f2] p-5">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">{label as string}</p>
-                      <p className="display-font mt-3 text-4xl text-[var(--brand-dark)]">{(assessment.risk_probability * 100).toFixed(1)}%</p>
-                      <p className="mt-2 text-sm font-bold capitalize text-[var(--brand)]">{assessment.risk_category} risk</p>
+                    <div key={label as string} className="simulator-result">
+                      <p>{label as string}</p>
+                      <strong>{(assessment.risk_probability * 100).toFixed(1)}%</strong>
+                      <span>{assessment.risk_category} risk</span>
                     </div>
                   );
                 })}
+                </div>
               </div>
-              <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
+              <p className="simulator-comparison-note">
                 {simulated ? "This comparison reflects a fresh model prediction using your changed inputs." : "Run the simulation to compare a fresh model result."}
               </p>
             </Card>
-            <Card className="p-8">
-              <h2 className="display-font text-2xl text-[var(--brand-dark)]">Changed inputs</h2>
+            <Card className="simulator-card simulator-changed-card p-8">
+              <h2>Changed inputs</h2>
               {changed.length ? (
-                <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+                <ul className="simulator-changed-list">
                   {changed.map(([name, label]) => <li key={name}>• {label}</li>)}
                 </ul>
               ) : (
-                <p className="mt-4 text-sm text-[var(--muted)]">No simulator values changed yet.</p>
+                <p className="simulator-empty">No simulator values changed yet.</p>
               )}
-              <p className="mt-6 border-t border-[var(--line)] pt-5 text-xs leading-5 text-[var(--muted)]">
+              <p className="simulator-changed-note">
                 The underlying model, preprocessing, threshold, and artifact bundle are unchanged.
               </p>
             </Card>
           </div>
         </div>
+        <footer className="simulator-footer">
+          <span>CrediLens AI · Built for clearer financial understanding</span>
+          <span>Made with ♥ by AI &amp; DS Final Year Team (Prophetic Programmers)</span>
+        </footer>
       </div>
     </main>
   );
