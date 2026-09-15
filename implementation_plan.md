@@ -17,7 +17,7 @@ This document is the primary, implementation-ready engineering guide for buildin
 
 **What is fixed**
 - The technology stack (frontend, backend, ML, explainability, LLM provider, PDF generation, deployment targets) is finalized and must not be substituted (see Section 3 below).
-- The three-model comparison approach (Logistic Regression, Random Forest, Gradient Boosting) is fixed.
+- The received model artifact is a soft-voting ensemble of Logistic Regression, Random Forest, and XGBClassifier. The ensemble is the primary model subject to compatibility and evaluation checks; separate local final-model artifacts are not assumed.
 - Manual borrower entry only for the MVP; CSV upload, bank integration, bureau integration, and automated approval/rejection are explicitly out of scope.
 
 **What remains dataset-dependent**
@@ -36,8 +36,8 @@ This document is the primary, implementation-ready engineering guide for buildin
 
 - Accept borrower information via a manual web form.
 - Validate and preprocess borrower input server-side.
-- Run three ML models (Logistic Regression, Random Forest, Gradient Boosting) on the same input.
-- Compare model outputs and select a primary model using a documented, non-accuracy-only methodology.
+- Run the received soft-voting ensemble on the same input after validating its artifact and preprocessing contract.
+- Evaluate the received ensemble using a documented, non-accuracy-only methodology when compatible test or holdout data is available.
 - Produce a risk probability and a risk category (thresholds dataset-dependent).
 - Generate SHAP-based (or model-specific, where SHAP is unsuitable) local feature explanations.
 - Use OpenRouter to translate structured model outputs into plain-language explanations — translation only, never a second opinion or override.
@@ -68,20 +68,20 @@ Each functional requirement includes ID, description, priority, dependencies, an
 | FR-001 | Landing page introducing CrediLens AI, its purpose, and responsible-use disclaimer | P0 | Phase 11 | Page renders with product explanation, clear "educational tool, not an official credit decision" banner, and CTA to start an assessment |
 | FR-002 | Borrower assessment form with dataset-derived fields | P0 | Phase 1 (dataset finalized), Phase 12 | Form renders only fields confirmed by dataset audit; required/optional fields enforced; no generic placeholder financial fields shipped without dataset backing |
 | FR-003 | Client-side and server-side validation of borrower input | P0 | Phase 1, Phase 12, FR-002 | Zod schema on frontend and Pydantic schema on backend match; invalid submissions produce field-level errors before any prediction call is made |
-| FR-004 | Assessment prediction API (`POST /api/assessment/predict`) | P0 | Phase 7, Phase 8 | Given valid input, returns predictions from all three models, primary model selection, risk probability, and risk category within defined latency budget |
-| FR-005 | Three-model prediction (Logistic Regression, Random Forest, Gradient Boosting) | P0 | Phase 4, Phase 6, Phase 8 | All three models are loaded and invoked per request; individual probabilities and classes are returned for each |
-| FR-006 | Model comparison and agreement calculation | P0 | Phase 8, Phase 9 | Response includes per-model outputs plus an agreement metric (e.g., whether all three models agree on class, and the spread of probabilities) |
+| FR-004 | Assessment prediction API (`POST /api/assessment/predict`) | P0 | Phase 7, Phase 8 | Given valid input, returns the received ensemble prediction, primary-model result, risk probability, and risk category within defined latency budget |
+| FR-005 | Received ensemble prediction | P0 | Phase 4, Phase 6, Phase 8 | The validated soft-voting ensemble artifact is loaded and invoked per request; its class and probability output are returned |
+| FR-006 | Prediction and compatibility reporting | P0 | Phase 8, Phase 9 | Response includes the received ensemble output and any supported compatibility/agreement information; it does not imply separately deployed local component models |
 | FR-007 | Primary model selection and risk category derivation | P0 | Phase 5, Phase 8, Section 19 | A single primary model's probability is mapped to a risk category using dataset-validated thresholds; mapping logic is documented and testable |
 | FR-008 | Explainability (SHAP / model-specific) | P0 | Phase 9 | For the primary model's prediction, an ordered list of feature contributions (sign + magnitude) is returned, mapped back to original (pre-encoding) feature names |
 | FR-009 | OpenRouter-based plain-language explanation | P0 | Phase 10 | Given structured prediction + contribution data, backend calls OpenRouter and returns a plain-language explanation that does not alter the prediction, does not fabricate data, and includes a limitations/uncertainty statement |
-| FR-010 | Reliability / data-quality indicator | P0 | Phase 9, Section 21 | Response includes a reliability level derived from documented rules (missing data, out-of-range values, unknown categories, model disagreement, threshold proximity) — never presented as calibrated statistical confidence unless calibration is implemented and validated |
+| FR-010 | Reliability / data-quality indicator | P0 | Phase 9, Section 21 | Response includes a reliability level derived from documented rules (missing data, out-of-range values, unknown categories, artifact compatibility, threshold proximity) — never presented as calibrated statistical confidence unless calibration is implemented and validated |
 | FR-011 | Score-improvement simulator | P0 | Phase 8, Phase 14 | User can edit a constrained subset of inputs; backend reruns real trained models (no hardcoded deltas); response clearly labeled "simulated," shows original vs. simulated side by side |
 | FR-012 | PDF assessment report generation | P0 | Phase 15 | `POST /api/report/generate` returns a downloadable PDF containing input summary, all model outputs, primary model result, explanation, reliability info, and responsible-use disclaimer |
 | FR-013 | Methodology / About page | P1 | Phase 11 | Static page describing models used, explainability approach, and limitations, written in plain, non-technical language |
 | FR-014 | Global error handling (frontend and backend) | P0 | Phase 7, Phase 11 | Backend returns structured error responses with consistent shape; frontend shows user-friendly error and loading states for all API calls |
 | FR-015 | Model info endpoint (`GET /api/model-info`) | P1 | Phase 7, Phase 8 | Returns model versions, training date, and high-level metrics for transparency |
 | FR-016 | Health check endpoint (`GET /api/health`) | P0 | Phase 7 | Returns 200 with service status; used for deployment verification |
-| FR-017 | Results dashboard displaying full assessment | P0 | Phase 13 | Dashboard shows risk score, category, model comparison, agreement, reliability, feature-contribution chart, LLM explanation, and disclaimer in one coherent view |
+| FR-017 | Results dashboard displaying full assessment | P0 | Phase 13 | Dashboard shows risk score, category, received-ensemble result, compatibility evidence, reliability, feature-contribution chart where supported, LLM explanation, and disclaimer in one coherent view |
 
 ---
 
@@ -89,8 +89,8 @@ Each functional requirement includes ID, description, priority, dependencies, an
 
 | Category | Requirement |
 |---|---|
-| **Performance** | `POST /api/assessment/predict` should respond in a target of < 3 seconds under normal load (excluding OpenRouter latency, which should be isolated and have its own timeout). Model inference itself (three models on a single row) should be near-instant (< 200ms) since models are pre-trained and loaded in memory. |
-| **Reliability** | Backend must degrade gracefully if OpenRouter is unavailable (return prediction + explanation fallback text, not a hard failure). Model loading failures at startup must fail fast with a clear log message rather than silently serving broken predictions. |
+| **Performance** | `POST /api/assessment/predict` should respond in a target of < 3 seconds under normal load (excluding OpenRouter latency, which should be isolated and have its own timeout). Received-ensemble inference should be near-instant once the validated artifact is loaded in memory. |
+| **Reliability** | Backend must degrade gracefully if OpenRouter is unavailable (return prediction + explanation fallback text, not a hard failure). Model loading or artifact-compatibility failures at startup must fail fast with a clear log message rather than silently serving broken predictions. |
 | **Maintainability** | Clear separation of ML training code (`ml/`), backend inference/service code (`backend/`), and frontend code (`frontend/`). No training logic inside the FastAPI runtime. Consistent naming and typed interfaces throughout. |
 | **Security** | No secrets in frontend bundles. OpenRouter API key lives only in backend environment variables. Backend validates and sanitizes all inputs. CORS restricted to known frontend origin(s) in production. |
 | **Privacy** | No unnecessary persistence of borrower data. No borrower PII sent to OpenRouter — only structured, de-identified model outputs and feature contributions. Logs must not contain raw borrower financial data. |
@@ -109,20 +109,20 @@ Each functional requirement includes ID, description, priority, dependencies, an
 | Decision | Current Status | Required Action |
 |---|---|---|
 | Dataset source | Not finalized | Select and document a public credit-risk dataset (e.g., a well-known open dataset for loan/credit default prediction) during Phase 1; record source, license, and any usage restrictions |
-| Target variable | `Dataset-dependent decision` | Identify the actual target column during Phase 1 dataset inspection |
+| Target variable | Confirmed as `defaulted` by received model metadata | Validate that local/approved evaluation data uses the same target column |
 | Target class mapping | `Dataset-dependent decision` | Determine what "0" and "1" (or multi-class labels) represent in the raw data |
 | Positive class | `Dataset-dependent decision` | Explicitly define which class represents higher credit risk; document to avoid inverted risk logic |
-| Feature list | `Dataset-dependent decision` | Finalize after Phase 1 feature classification; must exclude leakage-prone columns |
-| Numerical features | `Dataset-dependent decision` | Enumerate during Phase 1/3 |
-| Categorical features | `Dataset-dependent decision` | Enumerate during Phase 1/3 |
+| Feature list | Received metadata specifies 36 ordered features | Validate the exact names and order against the received artifact; investigate any mismatch before inference |
+| Numerical features | Received metadata specifies 33 numerical features | Validate types and preprocessing behavior against the received artifact |
+| Categorical features | Received metadata specifies 3 categorical features | Validate categories and preprocessing behavior against the received artifact |
 | Sensitive features | `Dataset-dependent decision` | Identify any protected-class-adjacent features (e.g., age, gender, marital status, zip code as proxy) during Phase 1 sensitive-feature review; decide whether to exclude, retain with justification, or retain for transparency-only display |
 | Missing-value policy | `Dataset-dependent decision` | Determined after missing-value analysis in Phase 1/2; documented in preprocessing pipeline (Phase 3) |
 | Outlier policy | `Dataset-dependent decision` | Determined during Phase 2 EDA |
 | Scaling requirements | `Dataset-dependent decision` | Determined by which models need scaling (Logistic Regression benefits from scaling; tree-based models do not strictly require it, but pipeline should be consistent) |
-| Risk thresholds (Low / Moderate / High) | `Dataset-dependent decision` | Must be derived from validation-set probability distributions in Phase 5, not invented arbitrarily |
-| Primary model selection criteria | Partially fixed (must not rely on accuracy alone) | Finalize weighting of metrics (F1, ROC-AUC, calibration, minority-class recall) during Phase 5 |
-| SHAP explainer type | `Dataset-dependent decision` | Choose `TreeExplainer` for Random Forest/Gradient Boosting and `LinearExplainer` or coefficient-based explanation for Logistic Regression, finalized in Phase 9 based on which model is primary |
-| Confidence methodology | Fixed as "not statistically calibrated unless validated" | If probability calibration (Platt scaling / isotonic regression) is implemented in Phase 4, confidence language may be upgraded; otherwise reliability language must stay qualitative |
+| Risk thresholds (Low / Moderate / High) | `Dataset-dependent decision` | Derive only from compatible validation probabilities or an approved threshold policy in Phase 5; leave pending when original validation probabilities are unavailable |
+| Primary model selection criteria | Fixed to the received soft-voting ensemble, subject to validation | Confirm compatibility and evaluate F1, ROC-AUC, calibration, minority-class recall, and other appropriate metrics in Phase 5; do not invent a competing local model-selection result |
+| SHAP/explanation method | `Dataset-dependent decision` | Inspect the received artifact and preprocessing contract in Phase 5/6; use only an explanation method compatible with the ensemble and its preprocessing |
+| Confidence methodology | Fixed as "not statistically calibrated unless validated" | Do not upgrade confidence language without valid calibration evidence from compatible data; otherwise reliability language must stay qualitative |
 | Simulator-editable features | `Dataset-dependent decision` | Determined in Phase 14 based on which features are both (a) plausible for a borrower to change and (b) present in the finalized feature list (e.g., income, credit utilization — not age or dependents) |
 
 **Rule:** No task in Phases 7–15 may hardcode a specific column name, threshold value, or class label until the corresponding row above is resolved and documented in `docs/dataset_documentation.md`.
@@ -136,9 +136,9 @@ Each functional requirement includes ID, description, priority, dependencies, an
 - **Frontend layer (Next.js/React/TypeScript):** Landing page, borrower form, results dashboard, simulator UI, report download trigger, methodology page. Talks to backend only via a typed API client.
 - **Backend API layer (FastAPI):** Exposes REST endpoints, orchestrates the request lifecycle, owns all business logic.
 - **Validation layer (Pydantic):** Validates and coerces all incoming request payloads before any processing occurs.
-- **Preprocessing layer:** Loads the persisted preprocessing pipeline (imputation, encoding, scaling) and applies it identically to training-time preprocessing.
-- **Prediction layer:** Loads the three persisted models and runs inference on the preprocessed input.
-- **Model comparison layer:** Aggregates the three outputs, computes agreement, selects the primary model's result per the documented policy.
+- **Preprocessing layer:** Loads the preprocessing behavior required by the received artifact, embedded in `model.pkl` or supplied by a separately validated compatible pipeline.
+- **Prediction layer:** Loads the received soft-voting ensemble and runs inference using the validated input contract.
+- **Model evaluation layer:** Validates the ensemble artifact and records evaluation/compatibility evidence; it does not assume independently deployed component models.
 - **Explainability layer:** Computes SHAP (or model-specific) contributions for the primary model's prediction and maps them back to human-readable feature names.
 - **Reliability layer:** Applies documented data-quality and model-agreement rules to compute a reliability level.
 - **OpenRouter service:** Sends a structured, de-identified summary of the above to OpenRouter and returns a plain-language explanation, with fallback text if the call fails.
@@ -153,9 +153,9 @@ flowchart LR
     A[Browser] --> B[Next.js Frontend]
     B --> C[FastAPI Backend]
     C --> D[Validation Layer - Pydantic]
-    D --> E[Preprocessing Layer]
-    E --> F[Prediction Layer\nLR / RF / GB]
-    F --> G[Model Comparison Layer]
+    D --> E[Preprocessing Layer\nembedded or validated external pipeline]
+    E --> F[Prediction Layer\nsoft-voting ensemble]
+    F --> G[Evaluation and Result Layer]
     G --> H[Explainability Layer - SHAP]
     G --> I[Reliability Layer]
     H --> J[OpenRouter Service]
@@ -207,8 +207,7 @@ credilens-ai/
 │   ├── preprocessing/             # Pipeline-building code (fit on train, saved via joblib)
 │   ├── training/                  # Training scripts per model, hyperparameter tuning
 │   ├── evaluation/                # Metrics computation, model comparison, calibration checks
-│   └── artifacts/                 # Exported: preprocessing_pipeline.joblib, model_lr.joblib,
-│                                   # model_rf.joblib, model_gb.joblib, metadata.json (gitignored large files
+│   └── artifacts/                 # Received/validated external model bundle (gitignored large files
 │                                   # or tracked via Git LFS depending on size)
 │
 ├── data/
@@ -445,304 +444,95 @@ move dataset.csv to ml/data/raw/original_dataset.csv
   docs/
   └── data_dictionary.md
 
-### Phase 4: ML Model Training and Experimentation
+### Phase 4: ML Model Training (Completed Externally)
 
-- **Objective:**  
-  Train, evaluate, compare, and document Logistic Regression, Random Forest, and Gradient Boosting models using the finalized, preprocessed dataset. The experimentation process must be recorded in Jupyter notebooks so that the complete ML workflow can be demonstrated to judges, while reusable training logic should be maintained in Python scripts.
+- **Objective:**  Record that model training was completed externally on another machine and that the resulting trained artifact was received for local validation and integration. This machine does not retrain the models unless required for validation or compatibility testing.
 
 - **Tasks/Subtasks:**
 
-  #### 4.1 Prepare the Training Dataset
+  - Record the received metadata: `soft_voting_ensemble`, target `defaulted`, 36 features, 33 numerical features, 3 categorical features, base estimators LogisticRegression/RandomForestClassifier/XGBClassifier, 8,500 training rows, source splits, and random state 42.
+  - Preserve the exact feature order and numerical/categorical feature lists from `ml/artifacts/model_metadata.json` as the input contract for later validation.
+  - Preserve the distinction between external training, local artifact validation, and backend inference integration.
+  - Do not overwrite `ml/artifacts/model.pkl` or invent component-model artifacts.
 
-  - Load the cleaned and preprocessed datasets generated in Phase 3.
-  - Use the finalized train/validation/test splits from Phase 3.
-  - Do not recreate inconsistent splits unless there is a documented reason.
-  - Confirm:
-    - Feature columns.
-    - Target column.
-    - Target class labels.
-    - Number of samples in each split.
-    - Class distribution in each split.
-    - Number of transformed features.
-  - Load and reuse the fitted preprocessing pipeline from:
+- **Files Affected:** `ml/artifacts/model.pkl`, `ml/artifacts/model_metadata.json` (received external artifacts; do not overwrite).
+- **Dependencies:** Phase 3 outputs and the external training-machine handoff.
+- **Expected Output:** The received artifacts `ml/artifacts/model.pkl` and `ml/artifacts/model_metadata.json`, plus a documented external-training handoff available for Phase 5 validation.
+- **Definition of Done:** The received artifact paths and metadata are recorded; no claim is made that training occurred locally; local retraining is explicitly out of scope unless needed for validation or compatibility testing.
+- **Risks/Common Mistakes:** Treating the ensemble as three independently deployed models; calling it Gradient Boosting; overwriting the received artifact; or assuming its preprocessing behavior without inspection.
 
-    `ml/artifacts/preprocessing_pipeline.joblib`
+### Phase 5: External Model Evaluation and Validation
 
-  - Ensure the preprocessing pipeline is not refitted on validation or test data.
+- **Objective:** Evaluate and validate the received soft-voting ensemble using the test dataset or an approved holdout dataset from the training machine. Do not assume that the component estimators are available as separate local artifacts.
+- **Tasks/Subtasks:**
+  - Confirm `ml/artifacts/model.pkl` loads successfully.
+  - Confirm the target is `defaulted`.
+  - Confirm the expected input feature count is 36.
+  - Confirm feature names and order match `model_metadata.json`.
+  - Confirm the 33 numerical and 3 categorical feature expectations.
+  - Inspect whether preprocessing is embedded inside `model.pkl` or must be supplied separately; do not assume either outcome.
+  - Obtain or validate test-set predictions and probability outputs from the training machine or an approved compatible holdout.
+  - Where compatible test data and labels are available, compute accuracy, precision, recall, F1-score, ROC-AUC, confusion matrix, and log loss when probability outputs are valid.
+  - Compute Brier score or other calibration metrics only when appropriate and supported by valid probabilities and labels.
+  - Evaluate minority-class performance.
+  - Validate that `predict()` and `predict_proba()` work as expected.
+  - Document limitations caused by training on another machine.
+  - Do not invent metrics when test data, predictions, or evaluation results have not been provided.
+  - Identify the received soft-voting ensemble as the primary model, subject to successful compatibility and evaluation checks.
+  - Keep risk thresholds pending when original validation probabilities are unavailable; derive them only from compatible validation predictions or an approved threshold policy.
+- **Files Affected:** `ml/evaluation/evaluate_external_model.py`, `ml/evaluation/validate_model_compatibility.py`, `docs/model_card.md`, evaluation outputs as available.
+- **Dependencies:** Phase 4 and a compatible test/holdout dataset or approved evaluation evidence.
+- **Expected Output:** A compatibility report, evaluation results when supported, documented limitations, and a defensible decision about whether the received ensemble can be used for inference.
+- **Definition of Done:** The ensemble load, target, feature count/order, feature types, preprocessing behavior, prediction shape, probability behavior, and available evaluation evidence are documented. No unavailable metric or threshold is presented as fact.
+- **Risks/Common Mistakes:** Inventing metrics, using incompatible data, finalizing arbitrary thresholds, or reporting component-model metrics as though they were separately deployed local models.
 
-  #### 4.2 Create Model Training Notebook
+### Phase 6: ML Artifact Integration and Export
 
-  - Create a dedicated notebook for model training and experimentation:
+- **Objective:** Package and validate the externally trained artifact bundle for backend inference without retraining or replacing the received model.
+- **Tasks/Subtasks:**
+  - Load `model.pkl` and `model_metadata.json`.
+  - Verify the model type is `soft_voting_ensemble` and the target is `defaulted`.
+  - Verify the expected feature count is 36 and feature names/order match metadata.
+  - Verify the required numerical and categorical feature behavior.
+  - Verify whether preprocessing is embedded in `model.pkl`; include `preprocessing_pipeline.joblib` only if the received model does not contain preprocessing and a compatible pipeline is confirmed. Do not invent or create a replacement pipeline.
+  - Confirm the model produces a prediction for a valid sample row and document the prediction output shape.
+  - Confirm whether `predict_proba()` is available and that returned probabilities are within the expected range.
+  - Pin and document the Python and ML library versions required to load the artifact, especially scikit-learn, XGBoost, NumPy, and joblib.
+  - Add an artifact smoke-test script and an artifact compatibility report.
+  - Document model version, external training source, training rows, random state, and known limitations.
+- **Files Affected:** `ml/evaluation/validate_model_compatibility.py`, `ml/evaluation/export_artifacts.py`, `ml/artifacts/`, `tests/ml/test_model_artifact.py`, compatibility documentation.
+- **Dependencies:** Phase 5 validation evidence and the received artifact bundle.
+- **Expected Output:** A validated bundle with this conditional structure:
 
-    `ml/notebooks/03_model_training.ipynb`
-
-  - The notebook should clearly document the complete model-development workflow, including:
-    - Loading the processed data.
-    - Loading the preprocessing pipeline.
-    - Preparing training, validation, and test data.
-    - Defining the models.
-    - Training baseline models.
-    - Performing cross-validation.
-    - Performing hyperparameter tuning.
-    - Evaluating model performance.
-    - Comparing model results.
-    - Saving trained models and metadata.
-  - Include explanatory Markdown cells before major sections so that the notebook is understandable to judges and reviewers.
-  - Include relevant tables, charts, and evaluation visualizations.
-  - Ensure the notebook can be executed from start to finish in a reproducible manner.
-
-  #### 4.3 Train Baseline Models
-
-  - Train baseline versions of the following models:
-    - Logistic Regression.
-    - Random Forest.
-    - Gradient Boosting.
-  - Use clearly documented baseline hyperparameters.
-  - Fix random seeds wherever supported.
-  - Record:
-    - Model configuration.
-    - Training dataset version.
-    - Number of input features.
-    - Training duration, if relevant.
-    - Training metrics.
-    - Validation metrics.
-
-  #### 4.4 Create Separate Model Experimentation Notebooks
-
-  - To make the experimentation process easier to understand and demonstrate, create separate notebooks where appropriate:
-
-    ```text
-    ml/notebooks/
-    ├── 03_logistic_regression.ipynb
-    ├── 04_random_forest.ipynb
-    └── 05_gradient_boosting.ipynb
-    ```
-
-  - Each model-specific notebook should include:
-    - Model overview and purpose.
-    - Model configuration.
-    - Baseline training.
-    - Cross-validation.
-    - Hyperparameter tuning.
-    - Validation evaluation.
-    - Relevant visualizations.
-    - Observations and limitations.
-    - Final selected configuration.
-  - Avoid duplicating complex implementation logic unnecessarily. Reusable functions should be imported from `ml/training/*.py`.
-
-  - If separate notebooks are not required, the same workflow may be maintained in one well-organized notebook:
-
-    `ml/notebooks/03_model_training.ipynb`
-
-  - The final project should prioritize clarity, reproducibility, and judge-facing presentation rather than creating notebooks solely for the sake of increasing their number.
-
-  #### 4.5 Apply Cross-Validation
-
-  - Apply suitable cross-validation on the training data.
-  - Use stratified cross-validation when appropriate for the classification task.
-  - Select evaluation metrics based on the target distribution and project objectives.
-  - Use cross-validation for:
-    - Robustness checks.
-    - Model performance estimation.
-    - Hyperparameter tuning.
-  - Do not use the test set during cross-validation or model selection.
-  - Record:
-    - Cross-validation strategy.
-    - Number of folds.
-    - Evaluation metric.
-    - Mean score.
-    - Standard deviation.
-    - Random seed, where applicable.
-
-  #### 4.6 Perform Hyperparameter Tuning
-
-  - Perform hyperparameter tuning for each model using an appropriate approach, such as:
-    - `GridSearchCV`.
-    - `RandomizedSearchCV`.
-    - Another justified search strategy.
-  - Tune only relevant hyperparameters for each model.
-  - Use cross-validation within the training workflow.
-  - Record:
-    - Hyperparameter search space.
-    - Search strategy.
-    - Cross-validation configuration.
-    - Best parameters.
-    - Best cross-validation score.
-    - Validation performance after tuning.
-  - Do not tune models using the test set.
-  - Avoid excessive tuning against a single validation set.
-
-  #### 4.7 Handle Class Imbalance
-
-  - Assess class imbalance using the findings from Phase 2 and Phase 3.
-  - Apply class-imbalance handling where appropriate, using methods such as:
-    - Class weights.
-    - Stratified splitting.
-    - Training-only resampling.
-    - Decision-threshold adjustment.
-  - Apply resampling only to the training data.
-  - Do not modify the validation or test distributions.
-  - Document:
-    - Whether class imbalance was present.
-    - The selected handling method.
-    - Why the method was selected.
-    - Its effect on model performance.
-
-  #### 4.8 Evaluate Models on the Validation Set
-
-  - Evaluate all baseline and tuned models on the validation set.
-  - Record appropriate classification metrics, including where relevant:
-    - Accuracy.
-    - Precision.
-    - Recall.
-    - F1-score.
-    - ROC-AUC.
-    - PR-AUC.
-    - Log loss.
-    - Confusion matrix.
-  - Avoid relying only on accuracy, especially when the target classes are imbalanced.
-  - Generate relevant visualizations, such as:
-    - Confusion matrices.
-    - ROC curves.
-    - Precision-recall curves.
-    - Model metric comparison charts.
-    - Feature importance plots, where applicable.
-
-  #### 4.9 Assess Probability Calibration
-
-  - Assess whether predicted probabilities are sufficiently reliable for the risk-scoring use case.
-  - Consider calibration methods such as:
-    - Platt scaling/sigmoid calibration.
-    - Isotonic regression.
-  - Implement calibration only if:
-    - It is supported by the available validation data.
-    - It improves probability reliability.
-    - It does not introduce data leakage.
-  - Fit calibration using appropriate training or validation procedures.
-  - Do not use the test set to fit calibration.
-  - Record:
-    - Whether calibration was applied.
-    - Calibration method.
-    - Before-and-after calibration metrics.
-    - Reason for the final decision.
-
-  #### 4.10 Compare the Three Models
-
-  - Create a consolidated model-comparison table containing:
-    - Model name.
-    - Baseline metrics.
-    - Tuned metrics.
-    - Cross-validation score.
-    - Validation metrics.
-    - Training time, if relevant.
-    - Calibration status.
-    - Class-imbalance strategy.
-  - Identify the best-performing model based on project-specific evaluation criteria.
-  - Do not select a model using a single metric without considering the risk-assessment context.
-  - Document the reasoning behind the model-selection recommendation.
-  - Final model selection and test-set evaluation should be formally completed in Phase 5.
-
-  #### 4.11 Save Trained Models and Experiment Results
-
-  - Save trained model artifacts using `joblib` or an equivalent serialization method.
-
-  - Save models at:
-
-    ```text
-    ml/artifacts/
-    ├── logistic_regression.joblib
-    ├── random_forest.joblib
-    └── gradient_boosting.joblib
-    ```
-
-  - Save model metadata at:
-
-    `ml/artifacts/model_metadata.json`
-
-  - Save experiment results at:
-
-    ```text
-    ml/reports/
-    ├── cross_validation_results.csv
-    ├── validation_metrics.json
-    ├── model_comparison.csv
-    └── training_summary.md
-    ```
-
-  - Metadata should include, where applicable:
-    - Model name and type.
-    - Hyperparameters.
-    - Best hyperparameters.
-    - Random seed.
-    - Training dataset version.
-    - Number of features.
-    - Cross-validation configuration.
-    - Cross-validation scores.
-    - Validation metrics.
-    - Class-imbalance strategy.
-    - Calibration status.
-    - Library versions.
-    - Training timestamp.
+  ```text
+  ml/
+  └── artifacts/
+      ├── model.pkl
+      ├── model_metadata.json
+      ├── preprocessing_pipeline.joblib  # only if separately required and compatible
+      └── feature_metadata.json
+  ```
 
 - **Suggested Files/Directories:**
 
   ```text
   ml/
-  ├── notebooks/
-  │   ├── 03_logistic_regression.ipynb
-  │   ├── 04_random_forest.ipynb
-  │   ├── 05_gradient_boosting.ipynb
-  │   └── 06_model_comparison.ipynb
-  │
-  ├── training/
-  │   ├── train_models.py
-  │   ├── tune_models.py
-  │   ├── evaluate_models.py
-  │   └── calibration.py
-  │
+  ├── evaluation/
+  │   ├── evaluate_external_model.py
+  │   ├── validate_model_compatibility.py
+  │   └── export_artifacts.py
   ├── artifacts/
-  │   ├── logistic_regression.joblib
-  │   ├── random_forest.joblib
-  │   ├── gradient_boosting.joblib
-  │   └── model_metadata.json
-  │
-  └── reports/
-      ├── cross_validation_results.csv
-      ├── validation_metrics.json
-      ├── model_comparison.csv
-      └── training_summary.md
+  │   ├── model.pkl
+  │   ├── model_metadata.json
+  │   ├── preprocessing_pipeline.joblib  # conditional
+  │   └── feature_metadata.json
+tests/
+└── ml/
+    └── test_model_artifact.py
+  ```
 
-### Phase 5: Model Evaluation and Selection
-
-- **Objective:** Rigorously evaluate all three models and define a transparent primary-model selection policy.
-- **Tasks/Subtasks:**
-  - Compute accuracy, precision, recall, F1-score, ROC-AUC, confusion matrix, and log loss (where relevant) for each model on the test set.
-  - Assess cross-validation stability (variance across folds).
-  - Assess calibration (reliability diagrams / Brier score) if calibration was implemented.
-  - Assess minority-class performance specifically (not just overall accuracy).
-  - Define and document the primary-model selection policy — combining F1/ROC-AUC, calibration quality, and minority-class recall rather than accuracy alone.
-  - Derive Low/Moderate/High risk thresholds from the primary model's validation-set probability distribution (e.g., using precision-recall trade-offs, not arbitrary cutoffs like 0.33/0.66).
-  - Retain and store all three models' metrics for the "model comparison" UI feature — the non-primary models are still shown for transparency, not discarded.
-- **Files Affected:** `ml/evaluation/*.py`, `docs/model_card.md`.
-- **Dependencies:** Phase 4.
-- **Expected Output:** A documented model comparison table, a chosen primary model, and dataset-validated risk thresholds.
-- **Definition of Done:** `docs/model_card.md` records metrics for all three models, the selection rationale, and the finalized thresholds; the "risk thresholds" row in Section 5 is resolved.
-- **Risks/Common Mistakes:** Selecting the primary model by accuracy alone on an imbalanced dataset (misleading); setting risk thresholds arbitrarily instead of from actual probability distributions.
-
-### Phase 6: ML Artifact Export
-
-- **Objective:** Package everything the backend needs to serve predictions without any training-time dependencies.
-- **Tasks/Subtasks:**
-  - Export preprocessing pipeline (`preprocessing_pipeline.joblib`).
-  - Export each trained model (`model_logistic_regression.joblib`, `model_random_forest.joblib`, `model_gradient_boosting.joblib`).
-  - Export a `metadata.json` containing: selected/primary model identifier, per-model metrics, feature name list (pre- and post-transform), class mapping, model version string, training date, dataset snapshot hash, and random seed used.
-  - Define artifact naming/versioning convention (e.g., `v{major}.{minor}` embedded in `metadata.json` and directory name, e.g., `ml/artifacts/v1/`).
-  - Add a validation script that loads all artifacts and runs a smoke prediction to confirm they load and produce output in the expected shape/range.
-- **Files Affected:** `ml/artifacts/`, `ml/evaluation/export_artifacts.py`.
-- **Dependencies:** Phase 5.
-- **Expected Output:** A versioned, self-describing artifact bundle ready for backend consumption.
-- **Definition of Done:** Smoke-test script loads all artifacts and returns a valid prediction for a sample row without errors.
-- **Risks/Common Mistakes:** Exporting a model trained on a preprocessing pipeline different from the one shipped (version skew); forgetting to pin library versions (e.g., scikit-learn version mismatch between training and serving can break `joblib` loading).
+- **Definition of Done:** Smoke tests load the received bundle, validate metadata and preprocessing behavior, and produce a valid prediction for a sample row without overwriting or replacing the received artifact. The compatibility report and required library versions are documented.
+- **Risks/Common Mistakes:** Shipping a separately fitted incompatible pipeline, pinning the wrong library versions, or treating a failed compatibility check as permission to retrain or replace the received model.
 
 ### Phase 7: FastAPI Backend Foundation
 
@@ -769,11 +559,11 @@ move dataset.csv to ml/data/raw/original_dataset.csv
   - Define the borrower assessment request schema (Pydantic), matching the finalized Phase 1 input schema.
   - Implement backend validation beyond type-checking (range checks, logical consistency checks).
   - Call the preprocessing service to transform the validated input.
-  - Run inference through all three models.
-  - Extract probabilities and map to classes using the documented class mapping.
-  - Apply primary-model selection logic (from Phase 5) to determine the "official" result of this request.
+  - Run inference through the validated received soft-voting ensemble.
+  - Extract its probability and map it to the target class using the documented class mapping.
+  - Use the received ensemble as the primary model only after Phase 5 compatibility checks pass.
   - Map the primary model's probability to a risk category using the finalized thresholds.
-  - Compute a model-agreement metric (e.g., do all three predict the same class; what is the max-min probability spread).
+  - Report ensemble compatibility/status; do not compute or imply agreement between separately deployed component models unless component outputs are explicitly available from the artifact.
   - Define and implement the full response schema.
   - Document an example request and response in `docs/api_contract.md`.
 - **Files Affected:** `backend/app/api/assessment.py`, `backend/app/schemas/assessment.py`, `backend/app/services/preprocessing_service.py`, `backend/app/services/prediction_service.py`.
@@ -792,7 +582,7 @@ move dataset.csv to ml/data/raw/original_dataset.csv
   - Implement data-quality checks: completeness (missing optional fields), range checks (values within training distribution bounds), unknown-category checks (categorical values not seen in training).
   - Implement model-disagreement check (from Phase 8's agreement metric).
   - Implement threshold-proximity check (how close the primary probability is to a risk-category boundary).
-  - Combine the above into a documented reliability-level calculation (e.g., High/Medium/Low reliability) with clear, non-statistical language unless calibration (Phase 4/5) was implemented and validated.
+  - Combine the above into a documented reliability-level calculation (e.g., High/Medium/Low reliability) with clear, non-statistical language unless calibration was implemented and validated using compatible evidence in Phase 5.
 - **Files Affected:** `backend/app/services/explainability_service.py`, `backend/app/services/reliability_service.py`.
 - **Dependencies:** Phase 8.
 - **Expected Output:** Feature-contribution data and a reliability level attached to every prediction response.
@@ -860,8 +650,8 @@ move dataset.csv to ml/data/raw/original_dataset.csv
 - **Tasks/Subtasks:**
   - Build a risk score card (probability + risk category, using dataset-derived thresholds).
   - Display primary model identity and rationale.
-  - Build a model comparison view (all three models' outputs side by side).
-  - Build a model-agreement indicator.
+  - Build a received-ensemble result view and show component-level details only if the artifact exposes them and they have been validated.
+  - Build a compatibility/evidence indicator rather than implying model agreement among unavailable local models.
   - Build a confidence/reliability indicator with clear, non-overstated language.
   - Build a feature-contribution chart (using Recharts) showing top positive and negative factors.
   - Display the OpenRouter plain-language explanation.
@@ -897,7 +687,7 @@ move dataset.csv to ml/data/raw/original_dataset.csv
 - **Tasks/Subtasks:**
   - Define the report request schema (references an assessment result, potentially including simulator results).
   - Build the ReportLab-based report service.
-  - Include: input summary, assessment date/time, all three model predictions, primary model result, risk probability, risk category, model agreement, top positive/negative factors, OpenRouter explanation, reliability information, simulator comparison (if present), and the responsible-use disclaimer.
+  - Include: input summary, assessment date/time, received ensemble prediction, primary model result, risk probability, risk category, compatibility/evidence status, top positive/negative factors where supported, OpenRouter explanation, reliability information, simulator comparison (if present), and the responsible-use disclaimer.
   - Wire up `POST /api/report/generate` to return the PDF as a downloadable file.
   - Wire up a "Download Report" button in the frontend results dashboard.
 - **Files Affected:** `backend/app/services/report_service.py`, `backend/app/api/report.py`, `frontend/components/results/DownloadReportButton.tsx`.
@@ -965,10 +755,10 @@ Base path assumed: `/api`. All request/response bodies are JSON except the PDF r
 - **Example response:** `{"status": "ok", "models_loaded": true, "version": "1.0.0"}`
 
 ### `POST /api/assessment/predict`
-- **Purpose:** Submit borrower data and receive full model predictions, comparison, explainability, and reliability.
+- **Purpose:** Submit borrower data and receive the received ensemble prediction, compatibility evidence, explainability where supported, and reliability.
 - **Method:** POST
 - **Request schema (illustrative, `Dataset-dependent decision`):** `BorrowerInput` object with fields finalized in Phase 1 (placeholder shape shown in Section 18).
-- **Response schema (illustrative):** `AssessmentResponse` containing `model_predictions` (per-model probability/class), `primary_model`, `risk_probability`, `risk_category`, `model_agreement`, `feature_contributions`, `reliability`.
+- **Response schema (illustrative):** `AssessmentResponse` containing the received ensemble prediction, `primary_model`, `risk_probability`, `risk_category`, compatibility status/evidence, supported feature contributions, and `reliability`.
 - **Validation rules:** All required fields present; numeric fields within dataset-derived plausible ranges; categorical fields within known categories (unknown categories allowed but flagged in reliability).
 - **Possible errors:** 422 (validation error, with field-level detail), 500 (unexpected server error), 503 (models not loaded).
 - **Status codes:** 200, 422, 500, 503.
@@ -1009,11 +799,11 @@ Base path assumed: `/api`. All request/response bodies are JSON except the PDF r
 - **Purpose:** Expose model versioning and high-level metrics for transparency.
 - **Method:** GET
 - **Request schema:** None.
-- **Response schema:** `{ models: [{ name: string, version: string, trained_on: string, metrics: object }], primary_model: string }`
+- **Response schema:** `{ model: { name: "soft_voting_ensemble", version: string, trained_on: string, metrics: object }, primary_model: "soft_voting_ensemble", compatibility_status: string }`
 - **Validation rules:** None.
 - **Possible errors:** 503 if artifacts not loaded.
 - **Status codes:** 200, 503.
-- **Example response:** Metadata pulled directly from `ml/artifacts/.../metadata.json`.
+- **Example response:** Metadata pulled directly from `ml/artifacts/model_metadata.json`; metrics remain unavailable until compatible evaluation evidence exists.
 
 **Consistency rule:** Every schema above must have a matching TypeScript type in `frontend/types/`, generated or manually kept in sync, and verified in CI (e.g., a script that diffs OpenAPI schema against the TypeScript types).
 
@@ -1046,21 +836,18 @@ AssessmentRequest {
 **Model Prediction**
 ```
 ModelPrediction {
-  model_name: "logistic_regression" | "random_forest" | "gradient_boosting"
+  model_name: "soft_voting_ensemble"
   predicted_class: string
   probability: number   // 0-1
 }
 ```
 
-**Model Comparison**
+**Model Result**
 ```
 ModelComparison {
-  predictions: ModelPrediction[3]
-  agreement: {
-    all_agree: boolean
-    probability_spread: number
-  }
-  primary_model: string
+  prediction: ModelPrediction
+  primary_model: "soft_voting_ensemble"
+  compatibility_status: "pending" | "validated" | "failed"
 }
 ```
 
@@ -1086,7 +873,7 @@ DataQualityResult {
 ```
 ReliabilityResult {
   level: "high" | "medium" | "low"
-  reasons: string[]              // e.g., ["model disagreement", "near threshold"]
+  reasons: string[]              // e.g., ["artifact compatibility pending", "near threshold"]
   is_statistically_calibrated: boolean
 }
 ```
@@ -1143,9 +930,9 @@ AssessmentResponse {
 ## 19. Risk Score and Category Design
 
 - **Probability vs. score:** The model outputs a probability (0–1) that the borrower belongs to the higher-risk class. This is not a "credit score" in the traditional 300–850 sense; CrediLens AI should present it as a "risk probability" or "risk estimate," never as an official score.
-- **Use of selected model probability:** Only the primary model's probability is used to derive the displayed risk category, though all three models' probabilities are shown for transparency and comparison.
+- **Use of received ensemble probability:** The received soft-voting ensemble's probability is used to derive the displayed risk category only after compatibility validation. Component probabilities are not promised unless exposed by the artifact and validated.
 - **Class mapping impact:** Correct interpretation depends entirely on which class was defined as "positive" (higher risk) during Phase 1. Inverting this by mistake would invert the entire product's meaning — this must be triple-checked and covered by a unit test.
-- **Threshold determination:** Low/Moderate/High boundaries must come from the validation-set probability distribution and precision/recall trade-offs identified in Phase 5 — never from arbitrary round numbers chosen before seeing the data.
+- **Threshold determination:** Low/Moderate/High boundaries must come from compatible validation probabilities and precision/recall trade-offs identified in Phase 5, or remain pending until an approved threshold policy exists. They must never be arbitrary round numbers chosen without evidence.
 - **Why thresholds are dataset- and validation-dependent:** Different datasets produce different probability distributions and different real-world costs of false positives/negatives; a threshold tuned for one dataset is not portable to another without re-validation.
 - **Avoiding false authority:** UI and PDF copy must consistently state that risk categories are internal, model-derived estimates for educational purposes, not standards used by any credit bureau or lender.
 
@@ -1154,7 +941,7 @@ AssessmentResponse {
 ## 20. Explainability Design
 
 - **Local vs. global explanations:** CrediLens AI focuses on **local** explanations — why this specific borrower received this specific prediction — using SHAP values for the primary model's prediction on that single input row. Global feature importance (e.g., overall Random Forest feature importances) may be shown on the Methodology page as supporting context, but the per-assessment explanation is always local.
-- **SHAP usage:** `TreeExplainer` for Random Forest and Gradient Boosting when either is primary; for Logistic Regression, either `LinearExplainer` or a direct coefficient × standardized-value contribution calculation, whichever is finalized in Phase 9.
+- **SHAP usage:** Select an explainer only after inspecting the received ensemble and preprocessing behavior. Do not assume a component-specific explainer or transformation mapping is available; use a compatible model-specific or ensemble explanation method, or document the limitation.
 - **Logistic Regression coefficients:** Used as a sanity check / alternative explanation source and for the Methodology page, since coefficients are inherently interpretable.
 - **Tree-based feature importance:** Used for global context (Methodology page) alongside SHAP for local explanations.
 - **Feature-name mapping after preprocessing:** The preprocessing pipeline (Phase 3) must persist a mapping from transformed column names (e.g., one-hot encoded `loan_purpose_debt_consolidation`) back to original feature and category names, so SHAP output is always shown in human-readable form.
@@ -1185,16 +972,16 @@ AssessmentResponse {
 | Unusual values | Numeric values far outside the training distribution's typical range | Lowers reliability |
 | Distribution shift | Input pattern differs substantially from training data population | Lowers reliability (heuristic, e.g., multiple unusual values together) |
 | Unknown categories | Categorical value not seen during training | Lowers reliability |
-| Model disagreement | The three models disagree on predicted class, or probabilities diverge significantly | Lowers reliability |
+| Ensemble compatibility uncertainty | The artifact, preprocessing contract, or probability behavior is not fully validated | Lowers reliability or blocks inference |
 | Probability near decision threshold | Primary model's probability sits close to a risk-category boundary | Lowers reliability (result is "borderline") |
 | Limited information | Many optional fields skipped | Lowers reliability |
 
 **Clear distinctions maintained throughout the system and UI copy:**
 - **Data quality** — a property of the *input* (completeness, plausibility).
-- **Model agreement** — a property of the *three models' outputs relative to each other*.
+- **Compatibility evidence** — the validated relationship between the received artifact, metadata, preprocessing behavior, and evaluation data; component agreement is not assumed.
 - **Prediction probability** — the *primary model's* raw output.
 - **Reliability indicator** — a *composite, rule-based* signal combining the above, presented qualitatively (High/Medium/Low).
-- **Confidence language** — must never claim statistical calibration (e.g., "90% confidence interval") unless Phase 4/5 implemented and validated probability calibration; otherwise, reliability is described only in qualitative terms ("based on data completeness and model agreement, this reliability is rated Medium").
+- **Confidence language** — must never claim statistical calibration (e.g., "90% confidence interval") without valid calibration evidence; otherwise, reliability is described only in qualitative terms (for example, "based on data completeness and artifact compatibility, this reliability is rated Medium").
 
 ---
 
@@ -1276,9 +1063,9 @@ AssessmentResponse {
 ## 26. Definition of Done
 
 - [ ] Dataset finalized and documented (`docs/dataset_documentation.md` complete, all Section 5 rows resolved)
-- [ ] All three models trained with recorded, reproducible metrics
-- [ ] Metrics documented in `docs/model_card.md`
-- [ ] Artifacts exported, versioned, and smoke-tested
+- [ ] External soft-voting ensemble handoff recorded; no local-training claim made
+- [ ] Received artifact compatibility validated and documented in `docs/model_card.md` or the compatibility report
+- [ ] Received artifacts are preserved, versioned where possible, and smoke-tested
 - [ ] Backend running locally and in production with health check passing
 - [ ] Frontend running locally and in production
 - [ ] `POST /api/assessment/predict` working end-to-end with real models
@@ -1308,7 +1095,7 @@ AssessmentResponse {
 - Phase 12 (borrower form) — needs finalized field list
 - Any dataset-specific parts of Phase 2–6
 
-**Must wait for trained model artifacts (Phase 6 output):**
+**Must wait for validated external model artifacts (Phase 6 output):**
 - Phase 7 (backend foundation's startup model loading, though the skeleton itself can start earlier)
 - Phase 8 (prediction API)
 - Phase 9 (explainability/reliability)
@@ -1319,7 +1106,7 @@ AssessmentResponse {
 - Phase 14 (simulator) — needs prediction endpoint and editable-feature decision
 - Phase 15 (PDF report) — needs full response shape from Phases 8–10
 
-**Sequential ML track:** Phase 1 → 2 → 3 → 4 → 5 → 6 (strictly sequential; each depends on the prior's documented output).
+**Sequential ML/integration track:** Phase 1 → 2 → 3 → 4 (external handoff) → 5 (validation) → 6 (integration); local retraining is not a required step.
 
 **Sequential backend track (after artifacts exist):** Phase 7 → 8 → 9 → 10.
 
