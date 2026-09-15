@@ -359,7 +359,12 @@ export default function AssessmentPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3157c8] text-white">C</span>
             CREDILENS
           </Link>
-          <span className="rounded-full border border-[#c8d2f4] bg-[#eef1ff] px-4 py-2 text-xs font-bold text-[#3157c8]">{fieldCatalog.length}-field assessment</span>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="rounded-full border border-[#aebdea] bg-white px-4 py-2 text-xs font-bold text-[#3157c8] transition hover:border-[#536fe8] hover:bg-[#eef1ff] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#dfe5ff]">
+              ← Home
+            </Link>
+            <span className="hidden rounded-full border border-[#c8d2f4] bg-[#eef1ff] px-4 py-2 text-xs font-bold text-[#3157c8] sm:inline-block">{fieldCatalog.length}-field assessment</span>
+          </div>
         </div>
 
         <div className="px-6 pb-8 pt-8 sm:px-10 sm:pb-12 sm:pt-10">
