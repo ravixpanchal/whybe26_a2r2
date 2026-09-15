@@ -13,6 +13,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import sklearn
+from sklearn.pipeline import Pipeline
 
 try:
     import xgboost
@@ -174,17 +175,42 @@ def main() -> int:
         return 1
 
     try:
-        preprocessing = joblib.load(ARTIFACT_DIR / "preprocessing_pipeline.joblib")
+        preprocessing_source = "separate artifact"
+        embedded_preprocessors = [
+            estimator.named_steps.get("preprocessor")
+            for estimator in getattr(model, "named_estimators_", {}).values()
+            if isinstance(estimator, Pipeline)
+        ]
+        if (
+            embedded_preprocessors
+            and len(embedded_preprocessors) == len(getattr(model, "named_estimators_", {}))
+            and all(preprocessor is not None for preprocessor in embedded_preprocessors)
+        ):
+            preprocessing = embedded_preprocessors[0]
+            preprocessing_source = "embedded estimator pipeline"
+            separate_error = None
+            try:
+                joblib.load(ARTIFACT_DIR / "preprocessing_pipeline.joblib")
+            except Exception as exc:
+                separate_error = format_exception(exc)
+        else:
+            preprocessing = joblib.load(ARTIFACT_DIR / "preprocessing_pipeline.joblib")
+            separate_error = None
         lines.extend(
             [
                 "",
                 "## Preprocessing",
                 "",
-                f"- Separate preprocessing loaded: `{object_description(preprocessing)}`",
+                f"- Effective preprocessing loaded: `{object_description(preprocessing)}`",
+                f"- Effective preprocessing source: `{preprocessing_source}`",
                 f"- Model exposes pipeline steps: `{bool(getattr(model, 'steps', None))}`",
-                "- Input contract: separate preprocessing is required unless the loaded model structure proves otherwise.",
+                "- Input contract: use the validated effective preprocessing source.",
             ]
         )
+        if separate_error:
+            lines.append(
+                f"- Standalone preprocessing artifact warning: `{separate_error}`"
+            )
     except Exception as exc:
         lines.extend(
             [

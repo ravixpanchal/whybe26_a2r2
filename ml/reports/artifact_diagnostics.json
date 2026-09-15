@@ -1,0 +1,103 @@
+{
+  "artifact_directory": "/home/ravi/Desktop/whybe26_a2r2/ml/artifacts",
+  "files": {
+    "feature_metadata.json": {
+      "sha256": "7aa2cd4724d88bc7e211be31bfca28bb897439a8138708d712fa60aa59880af5",
+      "size": 6643,
+      "status": "present"
+    },
+    "model.pkl": {
+      "sha256": "cf076dfdb03a155006d18f25f8499c8d9b33a84db1d68780a452932de3f96ea4",
+      "size": 11658905,
+      "status": "present"
+    },
+    "model_gradient_boosting.joblib": {
+      "sha256": "19010cec453f3ba62060d3eef9c1aa37312bc1e3573747c2acd54978a1f9e76c",
+      "size": 225436,
+      "status": "present"
+    },
+    "model_logistic_regression.joblib": {
+      "sha256": "80e96d5a8dec3286d8dd590bc8fa610562e49ce16946ec4f0c6b7a6cb9627a15",
+      "size": 1199,
+      "status": "present"
+    },
+    "model_metadata.json": {
+      "sha256": "596723cd7d0d8139bf3c02648d0392a1c6b79ab9c771d2ab5df093944969f414",
+      "size": 2291,
+      "status": "present"
+    },
+    "model_random_forest.joblib": {
+      "sha256": "b7b38495685e979e41faaa651c6308d95cc4b2959d0b67fdebc1086452f68cdc",
+      "size": 14267225,
+      "status": "present"
+    },
+    "preprocessing_pipeline.joblib": {
+      "sha256": "9c8547c2226488d8a45c70294460e49d2ba518594a4f91612000bd6eb172a162",
+      "size": 7674,
+      "status": "present"
+    },
+    "training_metadata.json": {
+      "sha256": "bfc20532a638e298b7a158b51df9dcf7b27db9b224527ccbfc0495615fd366a1",
+      "size": 2693,
+      "status": "present"
+    }
+  },
+  "metadata": {
+    "feature_metadata.json": {
+      "status": "valid",
+      "type": "dict"
+    },
+    "model_metadata.json": {
+      "status": "valid",
+      "type": "dict"
+    },
+    "training_metadata.json": {
+      "status": "valid",
+      "type": "dict"
+    }
+  },
+  "model_loading": {
+    "estimators": [
+      "logistic_regression",
+      "random_forest",
+      "xgboost"
+    ],
+    "status": "loaded",
+    "type": "sklearn.ensemble._voting.VotingClassifier",
+    "voting": "soft"
+  },
+  "portable_bundle": {
+    "estimator_order": [
+      "logistic_regression",
+      "random_forest",
+      "xgboost"
+    ],
+    "manifest": {
+      "status": "valid",
+      "type": "dict"
+    },
+    "referenced_files": {
+      "estimator_logistic_regression.joblib": true,
+      "estimator_random_forest.joblib": true,
+      "estimator_xgboost.json": true,
+      "preprocessing_pipeline.joblib": true
+    },
+    "weights": [
+      1,
+      1,
+      1
+    ]
+  },
+  "runtime": {
+    "packages": {
+      "fastapi": "0.141.1",
+      "joblib": "1.6.0",
+      "numpy": "2.5.3",
+      "pandas": "3.0.5",
+      "scikit-learn": "1.9.1",
+      "xgboost": "3.4.1"
+    },
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "python": "3.14.4"
+  }
+}

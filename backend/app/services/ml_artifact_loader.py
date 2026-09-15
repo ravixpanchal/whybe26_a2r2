@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import pandas as pd
 
 from app.config import Settings
 from app.core.exceptions import ArtifactLoadError
@@ -45,6 +46,21 @@ class MLArtifactLoader:
             raise ArtifactLoadError(
                 f"Unable to read model metadata at {metadata_path}: {exc}"
             ) from exc
+        feature_metadata_path = artifact_dir / self._settings.feature_metadata_filename
+        if feature_metadata_path.is_file():
+            try:
+                feature_metadata = json.loads(
+                    feature_metadata_path.read_text(encoding="utf-8")
+                )
+                feature_metadata["training_ranges"] = self._training_ranges(artifact_dir)
+                feature_metadata["known_categories"] = self._known_categories(feature_metadata)
+                metadata["feature_metadata"] = feature_metadata
+            except (OSError, json.JSONDecodeError, TypeError) as exc:
+                raise ArtifactLoadError(
+                    f"Unable to read feature metadata at {feature_metadata_path}: {exc}"
+                ) from exc
+        elif self._settings.artifact_format == "portable":
+            raise ArtifactLoadError(f"Required ML artifact is missing: {feature_metadata_path}")
 
         preprocessing = None
         if self._settings.artifact_format == "portable":
@@ -136,3 +152,29 @@ class MLArtifactLoader:
             )
         if metadata["feature_count"] != len(metadata["features"]):
             raise ArtifactLoadError("Model metadata feature_count does not match features")
+
+    @staticmethod
+    def _training_ranges(artifact_dir: Path) -> dict[str, dict[str, float]]:
+        train_path = artifact_dir.parent / "data" / "processed" / "train.csv"
+        if not train_path.is_file():
+            return {}
+        frame = pd.read_csv(train_path)
+        numeric = frame.select_dtypes(include="number")
+        return {
+            str(name): {"min": float(values.min()), "max": float(values.max())}
+            for name, values in numeric.items()
+            if name != "defaulted" and not values.empty
+        }
+
+    @staticmethod
+    def _known_categories(feature_metadata: dict[str, Any]) -> dict[str, list[str]]:
+        known: dict[str, set[str]] = {}
+        for transformed_name, source in feature_metadata.get(
+            "transformation_mapping", {}
+        ).items():
+            if transformed_name.startswith("categorical__"):
+                category = transformed_name.removeprefix(
+                    f"categorical__{source}_"
+                )
+                known.setdefault(source, set()).add(category)
+        return {name: sorted(values) for name, values in known.items()}

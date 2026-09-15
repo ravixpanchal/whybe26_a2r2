@@ -15,7 +15,7 @@ class PredictableModel:
 
 
 def _write_bundle(directory: Path) -> None:
-    directory.mkdir()
+    directory.mkdir(exist_ok=True)
     joblib.dump(PredictableModel(), directory / "model.pkl")
     joblib.dump({"transform": "test"}, directory / "preprocessing_pipeline.joblib")
     (directory / "model_metadata.json").write_text(
@@ -27,7 +27,11 @@ def _write_bundle(directory: Path) -> None:
 def test_loader_loads_bundle_once(tmp_path: Path) -> None:
     _write_bundle(tmp_path)
     loader = MLArtifactLoader(
-        Settings(ARTIFACT_DIRECTORY=tmp_path, PREPROCESSING_MODE="separate")
+        Settings(
+            ARTIFACT_DIRECTORY=tmp_path,
+            ARTIFACT_FORMAT="legacy_joblib",
+            PREPROCESSING_MODE="separate",
+        )
     )
 
     first = loader.load()
@@ -40,7 +44,11 @@ def test_loader_loads_bundle_once(tmp_path: Path) -> None:
 
 def test_loader_reports_missing_model(tmp_path: Path) -> None:
     loader = MLArtifactLoader(
-        Settings(ARTIFACT_DIRECTORY=tmp_path, PREPROCESSING_MODE="embedded")
+        Settings(
+            ARTIFACT_DIRECTORY=tmp_path,
+            ARTIFACT_FORMAT="legacy_joblib",
+            PREPROCESSING_MODE="embedded",
+        )
     )
 
     with pytest.raises(ArtifactLoadError, match="Required ML artifact is missing"):

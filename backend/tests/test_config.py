@@ -16,3 +16,7 @@ def test_artifact_directory_is_configurable() -> None:
     settings = Settings(ARTIFACT_DIRECTORY="custom-artifacts")
 
     assert settings.artifact_directory == Path("custom-artifacts")
+
+
+def test_portable_artifacts_are_the_default_format() -> None:
+    assert Settings().artifact_format == "portable"

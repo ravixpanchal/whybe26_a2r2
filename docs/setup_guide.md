@@ -25,3 +25,6 @@ npm run dev
 ## Environment
 
 Create a local `.env` file from `.env.example` and fill in the required values before running the app.
+The default configuration loads the validated portable ML bundle and keeps
+artifact loading required. Do not disable `ARTIFACT_LOADING_REQUIRED` in
+production.

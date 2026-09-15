@@ -1,12 +1,12 @@
 # ML Artifact Compatibility Report
 
-- Generated: `2026-09-15T07:11:48.514094+00:00`
-- Artifact directory: `D:\ENGINEER\WHYBEE\ml\artifacts`
+- Generated: `2026-09-15T08:21:02.156719+00:00`
+- Artifact directory: `/home/ravi/Desktop/whybe26_a2r2/ml/artifacts`
 - Validation mode: read-only; no artifact was modified or overwritten.
 
 ## Runtime versions
 
-- Python: `3.12.7`
+- Python: `3.14.4`
 - NumPy: `2.5.3`
 - pandas: `3.0.5`
 - scikit-learn: `1.9.1`
@@ -36,32 +36,34 @@
 - Primary model metadata: `None`
 - Risk thresholds metadata: `None`
 
-## Validation stopped
+## Model structure
 
-Model loading failed before runtime type inspection or prediction.
-- Exact error: `xgboost._c_api.XGBoostError: input stream corrupted`
-- Classification: incompatible dependency/version or serialization format; no workaround was applied.
+- Exact Python type: `sklearn.ensemble._voting.VotingClassifier`
+- Is Pipeline: `False`
+- Is VotingClassifier: `True`
+- Voting mode: `soft`
+- `predict()` available: `True`
+- `predict_proba()` available: `True`
+- Base estimators: `logistic_regression` = `sklearn.pipeline.Pipeline`, `random_forest` = `sklearn.pipeline.Pipeline`, `xgboost` = `sklearn.pipeline.Pipeline`
 
-```text
-Traceback (most recent call last):
-  File "D:\ENGINEER\WHYBEE\ml\evaluation\validate_artifacts.py", line 138, in main
-    model = joblib.load(ARTIFACT_DIR / "model.pkl")
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\ENGINEER\WHYBEE\ml\.venv\Lib\site-packages\joblib\numpy_pickle.py", line 755, in load
-    obj = _unpickle(
-          ^^^^^^^^^^
-  File "D:\ENGINEER\WHYBEE\ml\.venv\Lib\site-packages\joblib\numpy_pickle.py", line 632, in _unpickle
-    obj = unpickler.load()
-          ^^^^^^^^^^^^^^^^
-  File "C:\Users\Ajitesh Channa\anaconda3\Lib\pickle.py", line 1255, in load
-    dispatch[key[0]](self)
-  File "D:\ENGINEER\WHYBEE\ml\.venv\Lib\site-packages\joblib\numpy_pickle.py", line 452, in load_build
-    Unpickler.load_build(self)
-  File "C:\Users\Ajitesh Channa\anaconda3\Lib\pickle.py", line 1759, in load_build
-    setstate(state)
-  File "D:\ENGINEER\WHYBEE\ml\.venv\Lib\site-packages\xgboost\core.py", line 1906, in __setstate__
-    _check_call(_LIB.XGBoosterUnserializeFromBuffer(handle, ptr, length))
-  File "D:\ENGINEER\WHYBEE\ml\.venv\Lib\site-packages\xgboost\_c_api.py", line 190, in _check_call
-    raise XGBoostError(py_str(_LIB.XGBGetLastError()))
-xgboost._c_api.XGBoostError: input stream corrupted
-```
+## Preprocessing
+
+- Effective preprocessing loaded: `sklearn.compose._column_transformer.ColumnTransformer`
+- Effective preprocessing source: `embedded estimator pipeline`
+- Model exposes pipeline steps: `False`
+- Input contract: use the validated effective preprocessing source.
+- Standalone preprocessing artifact warning: `builtins.AttributeError: module 'sklearn.compose._column_transformer' has no attribute '_RemainderColsList'`
+
+## Smoke prediction
+
+- Sample shape: `(1, 36)`
+- Sample columns match metadata order: `True`
+- Prediction shape: `(1,)`
+- Prediction class values: `[0]`
+- Probability shape: `(1, 2)`
+- Probability values: `[[0.7722906641565409, 0.22770933087640524]]`
+- Probability range valid: `True`
+
+## Result
+
+- All artifact compatibility checks passed.

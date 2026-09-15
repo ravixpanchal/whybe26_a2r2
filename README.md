@@ -58,6 +58,54 @@ cannot be loaded, do not substitute the separate legacy estimators: they do not
 represent the declared soft-voting ensemble and cannot establish compatible
 preprocessing or prediction behavior.
 
+### Recovery sequence for a new machine
+
+1. Obtain the complete `ml/artifacts/` directory from the original training
+   machine or an external backup. Git and the GitHub repository do not contain
+   these gitignored files.
+2. On the original machine, use the recorded runtime as the starting point:
+   Python `3.14.4`, NumPy `2.5.3`, pandas `3.0.5`, scikit-learn `1.9.1`,
+   XGBoost `3.4.1`, and joblib `1.6.0`. Verify the actual installed versions
+   before loading the pickle; the checked-in requirements alone are not proof
+   of pickle compatibility.
+3. Run this read-only load check. It must print the ensemble type and all three
+   estimator names:
+
+   ```bash
+   python -c "import joblib; model = joblib.load('ml/artifacts/model.pkl'); print(type(model)); print(model.named_estimators_); print(model.weights)"
+   ```
+
+4. In that same environment, run:
+
+   ```bash
+   python ml/evaluation/export_portable_artifacts.py
+   python ml/evaluation/validate_artifacts.py
+   ```
+
+   Do not copy or enable the portable bundle if either command fails.
+5. Transfer the validated `ml/artifacts/portable/` directory and metadata to
+   this machine, rerun `diagnose_artifacts.py`, and only then configure
+   `ARTIFACT_FORMAT=portable`. Production must retain
+   `ARTIFACT_LOADING_REQUIRED=true`.
+
+If the original machine is unavailable and no external copy exists, migration
+cannot be completed without retraining. Retraining would create a new model,
+not recover the original ensemble, and is intentionally not performed here.
+
+Run the read-only migration diagnostic from the repository root before changing
+artifact settings:
+
+```bash
+python ml/evaluation/diagnose_artifacts.py ml/artifacts \
+  --output ml/reports/artifact_diagnostics.json
+```
+
+It records artifact sizes and SHA-256 hashes, metadata validity, installed
+package versions, source-pickle loading status, and portable-bundle references.
+The recorded artifact metadata identifies Python 3.14.4, scikit-learn 1.9.1,
+XGBoost 3.4.1, and joblib 1.6.0; the checked-in requirements are not proof of
+the original training environment.
+
 ## ML experimentation notebooks
 
 The executable Phase 4 experiments are in `ml/notebooks/`:
