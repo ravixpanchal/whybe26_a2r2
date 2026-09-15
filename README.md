@@ -10,6 +10,29 @@ CrediLens AI is an explainable borrower risk assessment platform for educational
 - data/: dataset snapshots and dataset documentation
 - docs/: design and operational documentation
 
+## Application flows
+
+The frontend provides these routes:
+
+- `/`: CrediLens AI home page with the product introduction, informational
+  panels, and links to start an assessment.
+- `/assessment`: guided borrower assessment with identity metadata, the
+  30-field user-facing form, contextual questions, live completeness card,
+  and validation before submission.
+- `/assessment/results`: generated assessment report with the actual model
+  probability and risk category, financial summaries, income history,
+  contribution information, recommendations, report actions, and responsible-AI
+  notices.
+- `/simulator`: What-If Simulator opened from the results flow. It allows a
+  limited set of editable inputs and sends them through the existing simulator
+  endpoint without changing the model or threshold.
+
+The assessment UI presents 30 editable/user-facing fields. The backend
+prediction contract intentionally remains a 36-feature contract because the
+trained model includes eight legacy `survey_q1` through `survey_q8` features.
+Full Name, Date of Birth, and the two contextual survey answers are report
+metadata and are not added to the model feature vector.
+
 ## Local setup
 
 Run commands from the repository root unless a command explicitly changes
@@ -86,6 +109,10 @@ The backend exposes:
 - `POST /api/assessment/explanation`
 - `POST /api/assessment/simulator/predict`
 - `POST /api/report/generate`
+
+The simulator uses `POST /api/assessment/simulator/predict` and preserves the
+same preprocessing, validated ensemble, feature order, threshold, and artifact
+bundle as the primary assessment flow.
 
 Check backend readiness:
 
@@ -246,6 +273,11 @@ npm run lint
 npm run build
 npm run start
 ```
+
+The frontend uses the same pale-lavender, cobalt-blue visual system across the
+home page, assessment page, results report, and What-If Simulator. UI styling
+changes do not alter prediction requests, feature encoding, or report
+generation behavior.
 
 ## Deployment
 
