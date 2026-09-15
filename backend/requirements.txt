@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+httpx
+python-dotenv
+joblib
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+shap
+reportlab
+pytest
+pytest-cov
+openrouter
