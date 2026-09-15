@@ -70,6 +70,14 @@ export type BorrowerInput = {
   loan_tenure_months: number | null;
 };
 export type AssessmentRequest = { borrower_input: BorrowerInput };
+export type BorrowerMetadata = {
+  full_name: string;
+  date_of_birth: string;
+};
+export type FinancialContext = {
+  emergency_financial_resilience: string | null;
+  repayment_comfort: number | null;
+};
 
 export type ExplanationResponse = {
   assessment: AssessmentResponse;

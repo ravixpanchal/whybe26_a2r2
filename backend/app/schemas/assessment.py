@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -139,9 +140,31 @@ class SimulatorResponse(BaseModel):
     disclaimer: str
 
 
+class BorrowerMetadata(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: str = Field(min_length=1, max_length=200)
+    date_of_birth: date
+
+    @model_validator(mode="after")
+    def validate_date_of_birth(self) -> "BorrowerMetadata":
+        if self.date_of_birth > date.today():
+            raise ValueError("date_of_birth cannot be in the future")
+        return self
+
+
+class FinancialContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    emergency_financial_resilience: str | None = Field(default=None, max_length=100)
+    repayment_comfort: int | None = Field(default=None, ge=1, le=5)
+
+
 class ReportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     explanation: ExplanationResponse
     borrower_input: BorrowerInput
+    borrower_metadata: BorrowerMetadata | None = None
+    financial_context: FinancialContext | None = None
     simulator: SimulatorResponse | None = None

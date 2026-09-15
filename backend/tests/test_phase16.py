@@ -112,6 +112,14 @@ def test_report_contains_real_response_sections_and_simulation_support() -> None
         payload = {
             "explanation": explanation,
             "borrower_input": _payload()["borrower_input"],
+            "borrower_metadata": {
+                "full_name": "Asha Borrower",
+                "date_of_birth": "1992-04-18",
+            },
+            "financial_context": {
+                "emergency_financial_resilience": "I would use emergency savings.",
+                "repayment_comfort": 4,
+            },
             "simulator": simulation,
         }
         response = client.post("/api/report/generate", json=payload)
@@ -121,6 +129,25 @@ def test_report_contains_real_response_sections_and_simulation_support() -> None
     assert response.headers["content-disposition"].endswith(
         'filename="credilens-assessment.pdf"'
     )
+
+
+def test_report_rejects_a_future_date_of_birth() -> None:
+    with TestClient(create_app()) as client:
+        explanation = client.post(
+            "/api/assessment/explanation", json=_payload()
+        ).json()
+        response = client.post(
+            "/api/report/generate",
+            json={
+                "explanation": explanation,
+                "borrower_input": _payload()["borrower_input"],
+                "borrower_metadata": {
+                    "full_name": "Asha Borrower",
+                    "date_of_birth": "2999-01-01",
+                },
+            },
+        )
+    assert response.status_code == 422
 
 
 def test_cors_does_not_grant_disallowed_origin_and_malformed_requests_are_4xx() -> None:

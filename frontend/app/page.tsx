@@ -1,156 +1,126 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+type ModalKind = "why" | "how" | null;
 
-const principles = [
-  {
-    number: "01",
-    title: "Evidence first",
-    body: "A validated ensemble reads the information you choose to share. No invented data, no hidden substitute model.",
-  },
-  {
-    number: "02",
-    title: "Plain language",
-    body: "See the factors that shaped an assessment in language designed to inform, not overwhelm.",
-  },
-  {
-    number: "03",
-    title: "Your context matters",
-    body: "Use the result as a starting point for reflection and preparation, never as an official lending decision.",
-  },
+const steps = [
+  ["1. Share Your Information", "Enter relevant financial and profile details through the existing secure assessment flow."],
+  ["2. Financial Analysis", "The validated assessment pipeline evaluates the information you provide without changing or supplementing it with invented data."],
+  ["3. Alternative Assessment", "The model returns the existing assessment probability and risk category from the validated soft-voting ensemble."],
+  ["4. Understand the Result", "Your report presents model-derived factors, data-quality observations, and practical recommendations in plain language."],
 ];
 
 export default function Home() {
+  const [modal, setModal] = useState<ModalKind>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!modal) return;
+    closeButtonRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setModal(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [modal]);
+
   return (
-    <div className="min-h-screen overflow-hidden">
-      <header className="relative z-10 border-b border-[var(--line)] bg-[var(--cream)]/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-          <Link href="/" className="flex items-center gap-3" aria-label="CrediLens home">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--brand)] text-sm font-bold text-white">
-              C
-            </span>
-            <span className="text-sm font-bold tracking-[0.18em] text-[var(--brand-dark)]">
-              CREDILENS
-            </span>
+    <main className="home-shell">
+      <div className="home-pattern" aria-hidden="true" />
+      <div className="home-frame">
+        <header className="home-header">
+          <Link href="/" className="home-brand" aria-label="CrediLens AI home">
+            <span className="home-mark">C</span>
+            <span>CrediLens AI</span>
           </Link>
-          <nav className="hidden items-center gap-8 text-sm text-[var(--muted)] md:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-[var(--brand)]">
-              How it works
-            </a>
-            <a href="#responsible-use" className="transition-colors hover:text-[var(--brand)]">
-              Responsible use
-            </a>
-            <Link href="/assessment" className="font-semibold text-[var(--brand)]">
-              Start assessment <span aria-hidden="true">↗</span>
-            </Link>
-          </nav>
-          <Link href="/assessment" className="text-sm font-semibold text-[var(--brand)] md:hidden">
-            Start <span aria-hidden="true">↗</span>
+          <Link href="/assessment" className="home-header-action home-header-action--highlight">Start Assessment <span aria-hidden="true">↗</span></Link>
+        </header>
+
+        <section className="home-hero">
+          <div>
+            <p className="home-eyebrow">Alternative financial insight</p>
+            <h1>Understand Your<br /><span>Financial Profile</span></h1>
+            <p className="home-lede">
+              CrediLens AI provides an alternative, data-driven assessment based on your financial information and profile — explained clearly and responsibly.
+            </p>
+          </div>
+          <div className="home-credit-card" aria-label="CrediLens AI context matters card">
+            <div className="home-credit-lines" aria-hidden="true" />
+            <div className="home-credit-top">
+              <span className="home-credit-brand">CrediLens AI</span>
+              <span className="home-credit-label">INSIGHTS FOR A<br />BRIGHTER TOMORROW</span>
+            </div>
+            <div className="home-credit-chip" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="home-credit-copy">
+              <span>Context matters.</span>
+              <strong>Your information tells a fuller<br className="hidden sm:block" /> story.</strong>
+            </div>
+            <div className="home-credit-circles" aria-hidden="true"><span /><span /></div>
+          </div>
+        </section>
+
+        <section className="home-tiles" aria-label="Learn about CrediLens AI">
+          <button type="button" className="home-tile" onClick={() => setModal("why")}>
+            <span className="home-tile-index">01</span>
+            <span className="home-tile-title">Why This</span>
+            <span className="home-tile-description">Traditional credit scores do not always reflect the complete financial picture. CrediLens AI explores additional financial indicators to create a broader assessment profile.</span>
+            <span className="home-tile-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" className="home-tile" onClick={() => setModal("how")}>
+            <span className="home-tile-index">02</span>
+            <span className="home-tile-title">How It Works</span>
+            <span className="home-tile-description">See how your financial information is transformed into an understandable assessment.</span>
+            <span className="home-tile-arrow" aria-hidden="true">↗</span>
+          </button>
+          <Link href="/assessment" className="home-tile home-tile-link">
+            <span className="home-tile-index">03</span>
+            <span className="home-tile-title">Take Assessment</span>
+            <span className="home-tile-description">Complete a short financial assessment and receive your personalized CrediLens AI report.</span>
+            <span className="home-tile-arrow" aria-hidden="true">↗</span>
           </Link>
-        </div>
-      </header>
+        </section>
 
-      <main>
-        <section className="relative bg-[var(--cream)]">
-          <div className="grain absolute inset-0" aria-hidden="true" />
-          <div className="relative mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:pb-32 lg:pt-28">
-            <div className="max-w-3xl">
-              <p className="mb-7 text-xs font-bold uppercase tracking-[0.28em] text-[var(--brand)]">
-                Understand your financial picture
-              </p>
-              <h1 className="display-font max-w-2xl text-5xl leading-[0.98] tracking-[-0.04em] text-[var(--brand-dark)] sm:text-7xl">
-                Clarity for your next financial step.
-              </h1>
-              <p className="mt-8 max-w-xl text-lg leading-8 text-[var(--muted)]">
-                CrediLens turns your borrower profile into an educational,
-                explainable assessment — so you can prepare with more context
-                and less guesswork.
-              </p>
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Button href="/assessment">Start an assessment <span aria-hidden="true">→</span></Button>
-                <a href="#how-it-works" className="px-2 text-sm font-semibold text-[var(--brand)]">
-                  Learn how it works <span aria-hidden="true">↓</span>
-                </a>
+        <footer className="home-footer">
+          <span>CrediLens AI · Built for clearer financial understanding</span>
+          <span>Educational tool only — not an official credit decision.</span>
+        </footer>
+      </div>
+
+      {modal && (
+        <div className="home-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}>
+          <section className="home-modal" role="dialog" aria-modal="true" aria-labelledby="home-modal-title">
+            <div className="home-modal-header">
+              <div>
+                <p className="home-eyebrow">{modal === "how" ? "The CrediLens approach" : "A broader view"}</p>
+                <h2 id="home-modal-title">{modal === "how" ? "How It Works" : "Why alternative assessment?"}</h2>
               </div>
-              <p className="mt-8 max-w-md text-xs leading-5 text-[var(--muted)]">
-                Educational tool only. CrediLens does not approve, reject, or
-                guarantee access to credit.
-              </p>
+              <button ref={closeButtonRef} type="button" className="home-modal-close" onClick={() => setModal(null)} aria-label="Close information panel">×</button>
             </div>
-            <div className="relative flex items-center justify-center lg:justify-end">
-              <div className="absolute right-4 top-4 h-72 w-72 rounded-full bg-[#cfe7d8] blur-3xl" aria-hidden="true" />
-              <Card className="relative w-full max-w-md rotate-1 p-7 shadow-[0_24px_70px_rgba(18,107,80,0.13)]">
-                <div className="flex items-start justify-between border-b border-[var(--line)] pb-6">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">Assessment preview</p>
-                    <p className="mt-2 display-font text-2xl text-[var(--brand-dark)]">Your result, explained.</p>
-                  </div>
-                  <span className="rounded-full bg-[#e0f1e8] px-3 py-1 text-xs font-bold text-[var(--brand)]">Validated</span>
-                </div>
-                <div className="py-8">
-                  <div className="flex items-end justify-between">
-                    <span className="text-sm text-[var(--muted)]">Default-risk probability</span>
-                    <span className="display-font text-5xl text-[var(--brand-dark)]">—</span>
-                  </div>
-                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#e4eee9]">
-                    <div className="h-full w-[58%] rounded-full bg-[var(--brand)]" />
-                  </div>
-                  <div className="mt-3 flex justify-between text-xs text-[var(--muted)]">
-                    <span>Lower risk</span><span>Higher risk</span>
-                  </div>
-                </div>
-                <div className="rounded-xl bg-[#f0f6f2] p-4 text-sm leading-6 text-[var(--muted)]">
-                  See the strongest factors behind your result and a clear
-                  reliability indicator.
-                </div>
-              </Card>
+            <div className="home-modal-content">
+              {modal === "how" ? (
+                <>
+                  {steps.map(([title, body]) => <article key={title} className="home-step"><span>{title.slice(0, 1)}</span><div><h3>{title}</h3><p>{body}</p></div></article>)}
+                  <article className="home-important"><h3>Important Note</h3><p>CrediLens AI is an experimental financial assessment tool. It does not replace official credit bureaus, lenders, financial advisors, or formal loan underwriting. Results are informational and are not a financial guarantee.</p></article>
+                </>
+              ) : (
+                <>
+                  <p>Alternative credit assessment means looking beyond a single traditional score to understand more of a person&apos;s financial context.</p>
+                  <p>Traditional credit scores may not capture every financial situation, especially when someone has limited formal credit history or a non-traditional income pattern.</p>
+                  <p>Income stability, expenses, savings, obligations, and financial behavior can provide additional context for understanding a borrower profile.</p>
+                  <div className="home-important"><h3>A responsible interpretation</h3><p>This result is an assessment insight, not an official credit score and not a guarantee of loan approval. It should be considered alongside a lender&apos;s complete evaluation.</p></div>
+                </>
+              )}
             </div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
-          <div className="max-w-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--brand)]">A considered approach</p>
-            <h2 className="display-font mt-4 text-4xl tracking-[-0.03em] text-[var(--brand-dark)] sm:text-5xl">
-              Insight without the black box.
-            </h2>
-          </div>
-          <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--line)] md:grid-cols-3">
-            {principles.map((principle) => (
-              <div key={principle.number} className="bg-white p-8 lg:p-10">
-                <p className="text-sm font-bold text-[var(--brand)]">{principle.number}</p>
-                <h3 className="mt-16 text-xl font-bold text-[var(--brand-dark)]">{principle.title}</h3>
-                <p className="mt-4 text-sm leading-6 text-[var(--muted)]">{principle.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="responsible-use" className="bg-[var(--brand-dark)] px-6 py-16 text-white lg:px-10">
-          <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-end">
-            <div className="max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#9bd4bb]">Responsible by design</p>
-              <h2 className="display-font mt-4 text-3xl tracking-[-0.02em] sm:text-4xl">
-                A helpful signal, never the final word.
-              </h2>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-[#c5ddd2]">
-                Results are based on a machine-learning model and the
-                information provided. They are not calibrated confidence,
-                financial advice, or an official credit decision.
-              </p>
-            </div>
-            <Button href="/assessment" variant="light">Explore your profile <span aria-hidden="true">→</span></Button>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-7 lg:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-xs leading-5 text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 CrediLens AI</span>
-          <span>For education and preparation only — not an official credit decision.</span>
+          </section>
         </div>
-      </footer>
-    </div>
+      )}
+    </main>
   );
 }

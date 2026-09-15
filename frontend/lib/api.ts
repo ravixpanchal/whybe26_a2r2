@@ -1,6 +1,8 @@
 import type {
   AssessmentRequest,
   AssessmentResponse,
+  BorrowerMetadata,
+  FinancialContext,
   ExplanationResponse,
   SimulatorResponse,
 } from "@/types/assessment";
@@ -68,6 +70,8 @@ export async function downloadReport(
   payload: {
     explanation: ExplanationResponse;
     borrower_input: AssessmentRequest["borrower_input"];
+    borrower_metadata?: BorrowerMetadata;
+    financial_context?: FinancialContext;
     simulator?: SimulatorResponse;
   },
 ): Promise<Blob> {

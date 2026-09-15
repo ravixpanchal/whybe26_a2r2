@@ -13,7 +13,7 @@ const variants = {
 };
 
 export function Button({ href, variant = "primary", className = "", ...props }: ButtonProps) {
-  const classes = `inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-6 text-sm font-bold transition-colors ${variants[variant]} ${className}`;
+  const classes = `inline-flex min-h-12 shrink-0 items-center justify-center gap-3 whitespace-nowrap rounded-full px-6 text-center text-sm font-bold transition-colors ${variants[variant]} ${className}`;
   if (href) return <Link href={href} className={classes}>{props.children}</Link>;
   return <button {...props} className={classes} />;
 }

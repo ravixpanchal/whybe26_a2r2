@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { downloadReport } from "@/lib/api";
 import type {
   BorrowerInput,
+  BorrowerMetadata,
+  FinancialContext,
   ExplanationResponse,
   SimulatorResponse,
 } from "@/types/assessment";
@@ -13,10 +15,14 @@ import type {
 export function DownloadReportButton({
   explanation,
   borrowerInput,
+  borrowerMetadata,
+  financialContext,
   simulator,
 }: {
   explanation: ExplanationResponse;
   borrowerInput: BorrowerInput;
+  borrowerMetadata?: BorrowerMetadata;
+  financialContext?: FinancialContext;
   simulator?: SimulatorResponse;
 }) {
   const [loading, setLoading] = useState(false);
@@ -29,6 +35,8 @@ export function DownloadReportButton({
       const blob = await downloadReport({
         explanation,
         borrower_input: borrowerInput,
+        borrower_metadata: borrowerMetadata,
+        financial_context: financialContext,
         simulator,
       });
       const url = URL.createObjectURL(blob);

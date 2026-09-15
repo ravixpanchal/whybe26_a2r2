@@ -12,22 +12,89 @@ CrediLens AI is an explainable borrower risk assessment platform for educational
 
 ## Local setup
 
-1. Create the Python environment in `backend/` and `ml/`.
-2. Install backend dependencies: `pip install -r backend/requirements.txt`
-3. Install ML dependencies: `pip install -r ml/requirements.txt`
-4. Install frontend dependencies: `cd frontend && npm install`
-5. Copy `.env.example` to `.env` and fill in the required values.
+Run commands from the repository root unless a command explicitly changes
+directory.
+
+### Python environment
+
+Linux/macOS:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements.txt
+python -m pip install -r ml/requirements.txt
+```
+
+Windows PowerShell:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements.txt
+python -m pip install -r ml/requirements.txt
+```
+
+Install frontend dependencies:
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+Create `.env` only for local development. Never commit it or upload it to
+Render/Vercel:
+
+```bash
+cp .env.example .env
+```
+
+For a local portable-artifact run, set `ARTIFACT_DIRECTORY` to the absolute
+path of this repository's `ml/artifacts` directory and use:
+
+```text
+ARTIFACT_LOADING_REQUIRED=true
+ARTIFACT_FORMAT=portable
+PORTABLE_MANIFEST_FILENAME=portable/manifest.json
+PREPROCESSING_MODE=embedded
+BACKEND_CORS_ORIGINS=http://localhost:3000
+OPENROUTER_API_KEY=
+```
 
 ## FastAPI backend
 
-Run the backend from the `backend/` directory:
+Run the backend from the repository root:
 
-```powershell
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```bash
+.venv/bin/python -m uvicorn app.main:app --app-dir backend --reload --host 0.0.0.0 --port 8000
 ```
 
-The development server exposes `GET http://localhost:8000/api/health`.
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --host 0.0.0.0 --port 8000
+```
+
+The backend exposes:
+
+- `GET /api/health`
+- `GET /api/model-info`
+- `POST /api/assessment/predict`
+- `POST /api/assessment/explanation`
+- `POST /api/assessment/simulator/predict`
+- `POST /api/report/generate`
+
+Check backend readiness:
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+The response must contain `"models_loaded": true` before using prediction
+endpoints.
 The health endpoint is available while artifact validation is explicitly disabled
 with `ARTIFACT_LOADING_REQUIRED=false`; this mode is for health/API development
 only and does not enable predictions.
@@ -139,6 +206,98 @@ package versions, source-pickle loading status, and portable-bundle references.
 The recorded artifact metadata identifies Python 3.14.4, scikit-learn 1.9.1,
 XGBoost 3.4.1, and joblib 1.6.0; the checked-in requirements are not proof of
 the original training environment.
+
+## Run the frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open <http://localhost:3000>. For local frontend-to-backend calls, create
+`frontend/.env.local` with:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+This variable is public because browser code calls the API directly. Never
+place `OPENROUTER_API_KEY` in the frontend.
+
+## Tests, lint, and production builds
+
+Run backend tests from the repository root:
+
+```bash
+ARTIFACT_DIRECTORY="$PWD/ml/artifacts" \
+ARTIFACT_FORMAT=portable \
+ARTIFACT_LOADING_REQUIRED=true \
+OPENROUTER_API_KEY="" \
+.venv/bin/python -m pytest -q backend/tests
+```
+
+Run frontend lint and build:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+npm run start
+```
+
+## Deployment
+
+### Render backend
+
+Create a Render Web Service connected to this repository:
+
+```text
+Root Directory: .
+Build Command: pip install -r backend/requirements.txt
+Start Command: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+```
+
+Required Render environment variables:
+
+```text
+ARTIFACT_DIRECTORY=/opt/render/project/src/ml/artifacts
+ARTIFACT_FORMAT=portable
+PORTABLE_MANIFEST_FILENAME=portable/manifest.json
+PREPROCESSING_MODE=embedded
+ARTIFACT_LOADING_REQUIRED=true
+BACKEND_CORS_ORIGINS=https://YOUR-VERCEL-DOMAIN.vercel.app
+OPENROUTER_API_KEY=<rotated-key>
+```
+
+Do not use `Add from .env`. Do not upload `.env`, `model.pkl`, or legacy
+artifacts. After deployment, verify:
+
+```bash
+curl https://YOUR-RENDER-DOMAIN.onrender.com/api/health
+```
+
+### Vercel frontend
+
+Create a Vercel project using the `frontend` directory as the project root.
+Add this Production environment variable:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=https://YOUR-RENDER-DOMAIN.onrender.com
+```
+
+Use these settings:
+
+```text
+Build Command: npm run build
+Output Directory: .next
+Install Command: npm install
+```
+
+Redeploy Vercel after changing environment variables. Ensure the Render
+`BACKEND_CORS_ORIGINS` value exactly matches the deployed Vercel origin,
+without a trailing slash.
 
 ## ML experimentation notebooks
 

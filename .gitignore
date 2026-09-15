@@ -15,6 +15,7 @@ out/
 *.sav
 data/raw/
 data/processed/
+GHCP_VSC_*_CONVERSATION.json
 
 # The validated portable inference bundle is required by deployed backends.
 !ml/artifacts/
