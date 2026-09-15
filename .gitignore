@@ -15,3 +15,14 @@ out/
 *.sav
 data/raw/
 data/processed/
+
+# The validated portable inference bundle is required by deployed backends.
+!ml/artifacts/
+!ml/artifacts/model_metadata.json
+!ml/artifacts/feature_metadata.json
+!ml/artifacts/portable/
+!ml/artifacts/portable/manifest.json
+!ml/artifacts/portable/preprocessing_pipeline.joblib
+!ml/artifacts/portable/estimator_logistic_regression.joblib
+!ml/artifacts/portable/estimator_random_forest.joblib
+!ml/artifacts/portable/estimator_xgboost.json

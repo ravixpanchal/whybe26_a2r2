@@ -92,6 +92,40 @@ If the original machine is unavailable and no external copy exists, migration
 cannot be completed without retraining. Retraining would create a new model,
 not recover the original ensemble, and is intentionally not performed here.
 
+### Render deployment
+
+The backend fails fast when the portable bundle is absent, so the validated
+portable files must be included in the commit deployed to Render. The
+repository ignores legacy pickles and all unrelated model files, but explicitly
+allows the portable bundle and its metadata.
+
+From the repository root, verify the files before pushing:
+
+```bash
+git status --short ml/artifacts
+git add .gitignore ml/artifacts/model_metadata.json \
+  ml/artifacts/feature_metadata.json ml/artifacts/portable
+git commit -m "Include validated portable ML bundle"
+git push
+```
+
+Use these Render settings:
+
+```text
+Root Directory: .
+Build Command: pip install -r backend/requirements.txt
+Start Command: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+ARTIFACT_DIRECTORY=/opt/render/project/src/ml/artifacts
+ARTIFACT_FORMAT=portable
+PORTABLE_MANIFEST_FILENAME=portable/manifest.json
+PREPROCESSING_MODE=embedded
+ARTIFACT_LOADING_REQUIRED=true
+```
+
+Do not upload `.env`, `model.pkl`, or any legacy artifacts to Render. After
+deployment, `GET /api/health` must report `models_loaded: true` before the
+frontend is pointed at the service.
+
 Run the read-only migration diagnostic from the repository root before changing
 artifact settings:
 
@@ -127,5 +161,6 @@ Open the notebooks from the repository root in VS Code or Jupyter and run them i
 
 ## Notes
 
-- Model artifacts are intentionally ignored by git.
+- Legacy model artifacts are intentionally ignored by git. Only the validated
+  portable deployment bundle is explicitly allowed.
 - This project is for educational/analytical use only and is not an official lender or credit decision system.
