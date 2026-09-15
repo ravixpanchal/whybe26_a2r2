@@ -147,12 +147,12 @@ body {
 .home-header-action--highlight { border-width: 2px; border-color: #7898ed; background: #dbe5ff; box-shadow: 0 0 0 4px rgba(120, 152, 237, .14), 0 8px 20px rgba(49, 86, 191, .12); }
 .home-header-action:hover { border-color: #4267cf; background: #d4dfff; transform: translateY(-1px); }
 .home-header-action:focus-visible, .home-tile:focus-visible, .home-modal-close:focus-visible { outline: 3px solid #7d9bf0; outline-offset: 3px; }
-.home-hero { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding: 5rem 1.75rem 4rem; }
+.home-hero { display: flex; align-items: stretch; justify-content: space-between; gap: 2rem; padding: 5rem 1.75rem 4rem; }
 .home-eyebrow { color: #6077c8; font-size: .7rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
 .home-hero h1 { margin-top: 1.25rem; color: #315bce; font-size: clamp(2.8rem, 6vw, 5.7rem); font-weight: 750; letter-spacing: -.065em; line-height: .93; }
 .home-hero h1 span { color: #436fe2; }
 .home-lede { max-width: 510px; margin-top: 1.75rem; color: #6c78a1; font-size: 1rem; line-height: 1.8; }
-.home-credit-card { position: relative; width: min(100%, 390px); min-height: 236px; overflow: hidden; border-radius: 1.25rem; background: linear-gradient(135deg, #2759d4 0%, #3874eb 58%, #5d8cf1 100%); padding: 1.45rem 1.55rem; color: white; box-shadow: 0 20px 38px rgba(50, 91, 202, .25); }
+.home-credit-card { position: relative; width: min(100%, 430px); min-height: 330px; align-self: stretch; overflow: hidden; border-radius: 1.25rem; background: linear-gradient(135deg, #2759d4 0%, #3874eb 58%, #5d8cf1 100%); padding: 1.45rem 1.55rem; color: white; box-shadow: 0 20px 38px rgba(50, 91, 202, .25); }
 .home-credit-lines { position: absolute; inset: -30% -15%; opacity: .3; background: repeating-radial-gradient(ellipse at 30% 20%, transparent 0 42px, rgba(221,231,255,.42) 43px 44px, transparent 45px 68px); transform: rotate(16deg); }
 .home-credit-top, .home-credit-chip, .home-credit-copy, .home-credit-circles { position: relative; z-index: 1; }
 .home-credit-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
@@ -191,7 +191,7 @@ body {
   .home-shell { padding: 1.25rem .7rem; }
   .home-frame { min-height: calc(100vh - 2.5rem); border-radius: 1.25rem; padding: 1rem; }
   .home-hero { flex-direction: column; align-items: flex-start; padding: 3.5rem .5rem 2.75rem; }
-  .home-credit-card { width: 100%; max-width: 390px; align-self: center; }
+  .home-credit-card { width: 100%; max-width: 390px; min-height: 236px; align-self: center; }
   .home-tiles { grid-template-columns: 1fr; padding: 0 .5rem; }
   .home-tile { min-height: 165px; }
   .home-footer { align-items: flex-start; flex-direction: column; margin-top: 2rem; }
