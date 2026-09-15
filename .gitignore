@@ -13,6 +13,5 @@ out/
 *.joblib
 *.pkl
 *.sav
-ml/artifacts/
 data/raw/
 data/processed/

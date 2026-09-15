@@ -1,0 +1,24 @@
+{
+  "format": "credilens_portable_soft_voting_v1",
+  "preprocessing": "preprocessing_pipeline.joblib",
+  "sklearn_estimators": {
+    "logistic_regression": "estimator_logistic_regression.joblib",
+    "random_forest": "estimator_random_forest.joblib"
+  },
+  "estimator_order": [
+    "logistic_regression",
+    "random_forest",
+    "xgboost"
+  ],
+  "weights": [
+    1,
+    1,
+    1
+  ],
+  "classes": [
+    0,
+    1
+  ],
+  "xgboost_estimator_name": "xgboost",
+  "xgboost_estimator": "estimator_xgboost.json"
+}

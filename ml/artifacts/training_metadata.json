@@ -1,0 +1,87 @@
+{
+  "target_column": "defaulted",
+  "positive_class": 1,
+  "random_seed": 42,
+  "training_timestamp_utc": "2026-09-15T05:40:30.618548+00:00",
+  "scikit_learn_version": "1.5.1",
+  "preprocessing_artifact": "preprocessing_pipeline.joblib",
+  "models": {
+    "logistic_regression": {
+      "best_parameters": {
+        "C": 0.1
+      },
+      "cross_validation": {
+        "best_cv_roc_auc": 0.8992429956625619,
+        "cv_roc_auc_std": 0.007690140409543256
+      },
+      "validation_metrics": {
+        "accuracy": 0.6366666666666667,
+        "precision": 0.28835978835978837,
+        "recall": 0.9688888888888889,
+        "f1": 0.4444444444444444,
+        "roc_auc": 0.9025080610021785,
+        "log_loss": 0.8415320548351726,
+        "brier_score": 0.2672305575047836
+      },
+      "class_weighting": "balanced sample weights",
+      "calibration": {
+        "implemented": false,
+        "brier_score_recorded": true,
+        "decision": "defer to Phase 5 evaluation"
+      }
+    },
+    "random_forest": {
+      "best_parameters": {
+        "max_depth": null,
+        "min_samples_leaf": 3
+      },
+      "cross_validation": {
+        "best_cv_roc_auc": 0.9051845400324137,
+        "cv_roc_auc_std": 0.012804702177681001
+      },
+      "validation_metrics": {
+        "accuracy": 0.8726666666666667,
+        "precision": 0.569672131147541,
+        "recall": 0.6177777777777778,
+        "f1": 0.5927505330490405,
+        "roc_auc": 0.9052583877995642,
+        "log_loss": 0.27281403430653334,
+        "brier_score": 0.0859010865610883
+      },
+      "class_weighting": "balanced sample weights",
+      "calibration": {
+        "implemented": false,
+        "brier_score_recorded": true,
+        "decision": "defer to Phase 5 evaluation"
+      }
+    },
+    "gradient_boosting": {
+      "best_parameters": {
+        "learning_rate": 0.1,
+        "max_depth": 2,
+        "n_estimators": 200
+      },
+      "cross_validation": {
+        "best_cv_roc_auc": 0.9152521148251522,
+        "cv_roc_auc_std": 0.008492897995544191
+      },
+      "validation_metrics": {
+        "accuracy": 0.8393333333333334,
+        "precision": 0.4794871794871795,
+        "recall": 0.8311111111111111,
+        "f1": 0.608130081300813,
+        "roc_auc": 0.9145272331154684,
+        "log_loss": 0.3431279145943736,
+        "brier_score": 0.1115655251326779
+      },
+      "class_weighting": "balanced sample weights",
+      "calibration": {
+        "implemented": false,
+        "brier_score_recorded": true,
+        "decision": "defer to Phase 5 evaluation"
+      }
+    }
+  },
+  "primary_model": null,
+  "risk_thresholds": null
+}
