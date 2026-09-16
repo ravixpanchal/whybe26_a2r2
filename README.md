@@ -12,7 +12,7 @@ CrediLens AI is an explainable borrower risk assessment platform for educational
 
 ## Application flows
 
-The frontend provides these routes:
+The frontend provides these routes:-
 
 - `/`: CrediLens AI home page with the product introduction, informational
   panels, and links to start an assessment.
