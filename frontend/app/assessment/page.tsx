@@ -534,7 +534,7 @@ export default function AssessmentPage() {
           </form>
         </div>
         <div className="border-t border-[#e2e6f7] px-6 py-5 text-center text-xs text-[#8490b5] sm:px-10">
-          Made with ♥ by AI &amp; DS Final Year Team (Prophetic Programmers)
+          Made with ♥ 
         </div>
       </div>
     </main>
